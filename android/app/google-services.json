@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "505261030730",
+    "project_id": "poti-3c375",
+    "storage_bucket": "poti-3c375.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505261030730:android:fd78522a974471f8e0d5b3",
+        "android_client_info": {
+          "package_name": "com.example.projetopoti"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdf4jymxvSpBcCzjMwBXLyOiLqIM8-7ZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505261030730:android:c8169a4525604e65e0d5b3",
+        "android_client_info": {
+          "package_name": "com.example.trabalhopoti"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdf4jymxvSpBcCzjMwBXLyOiLqIM8-7ZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
