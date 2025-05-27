@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart'; // Importa o Firestore
+import 'package:firebase_auth/firebase_auth.dart'; // Importa o Auth para pegar o usuário logado
+import 'cadastro_pet_peso.dart'; // <-- ADICIONE ESTA LINHA
 class CadastroPetsPage extends StatefulWidget {
   const CadastroPetsPage({super.key});
 
@@ -10,14 +12,92 @@ class CadastroPetsPage extends StatefulWidget {
 class _CadastroPetsPageState extends State<CadastroPetsPage> {
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _racaController = TextEditingController();
+  bool _isLoading = false; // Para mostrar um indicador de carregamento
+
+  // Instância do Firestore
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Instância do Auth
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Função para cadastrar o pet no Firestore
+  // ... (dentro de _CadastroPetsPageState em cadastro_pet.dart)
+
+  Future<void> _cadastrarPet() async {
+    User? currentUser = _auth.currentUser;
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro: Nenhum usuário logado.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    String nome = _nomeController.text.trim();
+    String raca = _racaController.text.trim();
+
+    if (nome.isEmpty || raca.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, preencha o Nome e a Raça.'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // --- MODIFICAÇÃO AQUI ---
+      // Usamos .add() para criar e pegamos a referência (DocumentReference)
+      DocumentReference petRef = await _firestore.collection('pets').add({
+        'nome': nome,
+        'raca': raca,
+        'tutorId': currentUser.uid,
+        'fotoUrl': null,
+        'criadoEm': Timestamp.now(),
+        'peso': null, // Adiciona o campo peso como nulo inicialmente
+      });
+
+      // Pega o ID do documento criado
+      String petId = petRef.id;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nome e Raça salvos! Próximo passo.'), backgroundColor: Colors.lightGreen),
+      );
+
+      // Navega para a próxima página (CadastroPetPesoPage), passando o ID
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CadastroPetPesoPage(petId: petId),
+        ),
+      );
+      // --- FIM DA MODIFICAÇÃO ---
+
+    } catch (e) {
+      print("Erro ao cadastrar pet: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao cadastrar o pet: ${e.toString()}'), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+// ... (o resto do arquivo cadastro_pet.dart continua igual)
+
+  // --- O restante do seu código da UI permanece quase o mesmo ---
+  // --- Apenas adicionamos o _isLoading e a chamada a _cadastrarPet ---
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Fundo principal da página
+      backgroundColor: Colors.white,
       body: Row(
         children: [
-          // Menu Lateral (Sidebar) - Simplificado para o exemplo
+          // Menu Lateral (Sidebar) - Mantido como está
           Container(
             width: 250,
             color: Colors.white,
@@ -29,7 +109,7 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'imagens/logo_sem_fundo.png', // **Certifique-se de ter o logo em assets**
+                      'imagens/logo_sem_fundo.png',
                       height: 60,
                     ),
                     const SizedBox(width: 5),
@@ -52,11 +132,11 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                 ),
                 const SizedBox(height: 10),
                 TextButton.icon(
-                  onPressed: () {},
+                  onPressed: () {}, // Pode manter ou alterar
                   icon: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF9A825), // Laranja
+                      color: const Color(0xFFF9A825),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.add, color: Colors.white, size: 20),
@@ -74,7 +154,7 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                 _buildMenuItem(Icons.home_outlined, 'Início'),
                 _buildMenuItem(Icons.monitor_heart_outlined, 'Monitorar'),
                 _buildMenuItem(Icons.restaurant_menu_outlined, 'Próximas Refeições'),
-                const Spacer(), // Empurra os itens para baixo
+                const Spacer(),
                 const Divider(),
                 _buildMenuItem(Icons.person_outline, 'Meu Perfil'),
                 _buildMenuItem(Icons.settings_outlined, 'Configurações'),
@@ -82,24 +162,28 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                      color: const Color(0xFFF9A825).withOpacity(0.8), // Laranja mais claro
+                      color: const Color(0xFFF9A825).withOpacity(0.8),
                       borderRadius: BorderRadius.circular(10)
                   ),
                   child: Row(
                     children: [
                       const CircleAvatar(
-                        backgroundImage: NetworkImage('https://via.placeholder.com/40'), // **Substitua pela imagem do usuário**
+                        backgroundImage: NetworkImage('https://via.placeholder.com/40'),
                         radius: 20,
                       ),
                       const SizedBox(width: 10),
-                      const Text(
-                        'Olá\nMarcos',
-                        style: TextStyle(color: Colors.black, fontSize: 14),
+                      Text( // Pega o email do usuário logado (ou mostra 'Usuário')
+                        'Olá\n${_auth.currentUser?.email ?? 'Usuário'}',
+                        style: const TextStyle(color: Colors.black, fontSize: 14),
                       ),
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.exit_to_app, color: Colors.black54),
-                        onPressed: () {},
+                        onPressed: () async {
+                          // Lógica para Logout e ir para tela de Login
+                          await _auth.signOut();
+                          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false); // Ajuste a rota se necessário
+                        },
                       ),
                     ],
                   ),
@@ -111,12 +195,11 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
           // Conteúdo Principal
           Expanded(
             child: Container(
-              color: const Color(0xFFFAFAFA), // Fundo cinza claro
+              color: const Color(0xFFFAFAFA),
               padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 30.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Cabeçalho P.O.T.I
                   const Align(
                     alignment: Alignment.topLeft,
                     child: Text(
@@ -146,18 +229,14 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min, // Para o Card se ajustar
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Header do Card (Voltar, Título, Progresso)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.arrow_back, color: Colors.grey),
-                              onPressed: () {
-                                // Ação de voltar
-                                Navigator.pop(context);
-                              },
+                              onPressed: () => Navigator.pop(context), // Ação de voltar
                             ),
                             const Text(
                               'Nome e Raça',
@@ -167,7 +246,7 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                               ),
                             ),
                             const Text(
-                              '1 / 2',
+                              '1 / 2', // Mantenha ou ajuste a lógica de progresso
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey,
@@ -176,23 +255,20 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        // Barra de Progresso
                         const LinearProgressIndicator(
                           value: 0.5,
                           backgroundColor: Colors.grey,
-                          color: Color(0xFFF9A825), // Laranja
+                          color: Color(0xFFF9A825),
                           minHeight: 6,
                         ),
                         const SizedBox(height: 50),
-
-                        // Avatar / Imagem do Pet
                         Stack(
                           alignment: Alignment.bottomRight,
                           children: [
                             const CircleAvatar(
                               radius: 80,
                               backgroundImage: NetworkImage(
-                                  'https://via.placeholder.com/160/FFA500/000000?Text=Pet'), // **Substitua pela imagem do pet ou placeholder**
+                                  'https://via.placeholder.com/160/FFA500/000000?Text=Pet'),
                               backgroundColor: Colors.grey,
                             ),
                             Container(
@@ -204,15 +280,16 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                               child: IconButton(
                                 icon: const Icon(Icons.camera_alt, color: Color(0xFFF9A825)),
                                 onPressed: () {
-                                  // Ação para escolher/tirar foto
+                                  // TODO: Implementar upload/seleção de imagem
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Upload de foto ainda não implementado.')),
+                                  );
                                 },
                               ),
                             )
                           ],
                         ),
                         const SizedBox(height: 40),
-
-                        // Campos de Texto
                         Row(
                           children: [
                             Expanded(
@@ -225,15 +302,11 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                           ],
                         ),
                         const SizedBox(height: 50),
-
-                        // Botões de Navegação
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             TextButton(
-                              onPressed: () {
-                                // Ação para próximo passo (ou apenas texto)
-                              },
+                              onPressed: () { /* TODO: Implementar próximo passo */ },
                               child: const Text(
                                 'Vá para o próximo passo',
                                 style: TextStyle(
@@ -245,31 +318,33 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                             Row(
                               children: [
                                 TextButton(
-                                  onPressed: () {
-                                    // Ação de ignorar
-                                  },
+                                  onPressed: () => Navigator.pop(context), // Ignorar volta
                                   child: const Text(
                                     'Ignorar',
                                     style: TextStyle(color: Colors.grey, fontSize: 16),
                                   ),
                                 ),
                                 const SizedBox(width: 20),
+                                // --- BOTÃO CONFIRMAR MODIFICADO ---
                                 ElevatedButton(
-                                  onPressed: () {
-                                    // Ação de confirmar
-                                    final nome = _nomeController.text;
-                                    final raca = _racaController.text;
-                                    print('Nome: $nome, Raça: $raca');
-                                  },
+                                  onPressed: _isLoading ? null : _cadastrarPet, // Chama a função e desabilita se estiver carregando
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFF9A825), // Laranja
+                                    backgroundColor: const Color(0xFFF9A825),
                                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
-                                  child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
+                                  child: _isLoading // Mostra 'Cadastrando...' ou 'Confirmar'
+                                      ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2,),
+                                  )
+                                      : const Text(
+                                    'Confirmar',
+                                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ],
                             ),
@@ -278,8 +353,7 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                       ],
                     ),
                   ),
-                  const Spacer(), // Empurra o footer para baixo
-                  // Footer (Redes Sociais)
+                  const Spacer(),
                   const Align(
                     alignment: Alignment.bottomCenter,
                     child: Row(
@@ -287,11 +361,11 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                       children: [
                         Text('Siga nas Redes sociais'),
                         SizedBox(width: 10),
-                        Icon(Icons.facebook), // **Use ícones de redes sociais reais (ex: font_awesome_flutter)**
+                        Icon(Icons.facebook),
                         SizedBox(width: 10),
-                        Icon(Icons.camera_alt_outlined), // Instagram placeholder
+                        Icon(Icons.camera_alt_outlined),
                         SizedBox(width: 10),
-                        Icon(Icons.account_box_rounded), // Twitter placeholder
+                        Icon(Icons.account_box_rounded),
                       ],
                     ),
                   )
@@ -304,7 +378,6 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
     );
   }
 
-  // Widget auxiliar para criar itens do menu lateral
   Widget _buildMenuItem(IconData icon, String title) {
     return TextButton.icon(
       onPressed: () {},
@@ -320,7 +393,6 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
     );
   }
 
-  // Widget auxiliar para criar campos de texto
   Widget _buildTextField(String label, String hint, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,10 +410,10 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
           decoration: InputDecoration(
             hintText: hint,
             filled: true,
-            fillColor: const Color(0xFFF3F4F6), // Cinza bem claro
+            fillColor: const Color(0xFFF3F4F6),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
-              borderSide: BorderSide.none, // Sem borda visível
+              borderSide: BorderSide.none,
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           ),

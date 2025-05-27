@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'cadastro_pet.dart'; // Mantenha a importação da sua página de cadastro
+import 'package:projetoflutter/paginas/cadastro_pet.dart';
+import 'package:projetoflutter/widgets/side_bar_menu.dart'; // <-- IMPORTA O NOVO DRAWER
 
-// Classe da Página Inicial refatorada
 class PaginaInicialRefatorada extends StatefulWidget {
   const PaginaInicialRefatorada({super.key});
 
@@ -11,154 +11,23 @@ class PaginaInicialRefatorada extends StatefulWidget {
 
 class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
   bool _permGranted = false;
-  bool _showPopup = false; // Renomeado para clareza
+  bool _showPopup = false;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // Chave para controlar o Scaffold
 
-  // Função auxiliar para construir o menu lateral (Sidebar)
-  Widget _buildSidebar(BuildContext context) {
+  // Função para construir a área de conteúdo principal (agora é o body)
+  Widget _buildContentArea(BuildContext context) {
     return Container(
-      width: 250, // Largura padrão do sidebar
-      color: Colors.white, // Fundo branco
-      padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 20.0),
+      color: const Color(0xFFFAFAFA),
+      padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 30.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Logo e Título
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'imagens/logo_sem_fundo.png', // Mantenha seu caminho
-                height: 60,
-              ),
-              const SizedBox(width: 5),
-              const Text(
-                'P.O.T.I',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 50),
-
-          // Seção "Seus Pets" - Estilo consistente com CadastroPetsPage
-          const Text(
-            'Seus Pets',
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CadastroPetsPage()),
-              );
-            },
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9A825), // Laranja P.O.T.I
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.add, color: Colors.white, size: 20),
-            ),
-            label: const Text(
-              'Adicionar',
-              style: TextStyle(color: Colors.black, fontSize: 16),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              alignment: Alignment.centerLeft,
-            ),
-          ),
-          const Divider(),
-          const SizedBox(height: 20),
-
-          // Itens do Menu - Estilo consistente
-          _buildMenuItem(Icons.home_outlined, 'Início', () {}),
-          _buildMenuItem(Icons.pets_outlined, 'Alimentar', () {}),
-          _buildMenuItem(Icons.history_outlined, 'Histórico', () {}),
-          _buildMenuItem(Icons.calendar_today_outlined, 'Criar Plano', () {}),
-          const Spacer(), // Empurra os itens para baixo
-          const Divider(),
-          _buildMenuItem(Icons.person_outline, 'Meu Perfil', () {}),
-          _buildMenuItem(Icons.settings_outlined, 'Configurações', () {}),
-          const SizedBox(height: 30),
-
-          // Seção do Usuário (Placeholder)
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-                color: const Color(0xFFF9A825).withOpacity(0.8),
-                borderRadius: BorderRadius.circular(10)),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  backgroundImage: NetworkImage('https://via.placeholder.com/40'),
-                  radius: 20,
-                ),
-                const SizedBox(width: 10),
-                const Text(
-                  'Olá\nUsuário', // Adapte conforme necessário
-                  style: TextStyle(color: Colors.black, fontSize: 14),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.exit_to_app, color: Colors.black54),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Função auxiliar para construir itens do menu
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
-    return TextButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, color: Colors.grey, size: 20),
-      label: Text(
-        title,
-        style: const TextStyle(color: Colors.black54, fontSize: 16),
-      ),
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        alignment: Alignment.centerLeft,
-      ),
-    );
-  }
-
-  // Função auxiliar para construir a área de conteúdo principal
-  Widget _buildContentArea(BuildContext context) {
-    return Expanded(
-      child: Container(
-        color: const Color(0xFFFAFAFA), // Fundo cinza claro
-        padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 30.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cabeçalho
-            const Text(
-              'Olá Tutor\nSeja bem Vindo ao P.O.T.I',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 40),
-
-            // Card "Sem Dispositivos" - Estilo consistente
-            Container(
-              width: 380, // Ajuste a largura conforme necessário
-              height: 400, // Ajuste a altura conforme necessário
+          // Card "Sem Dispositivos"
+          Align( // Centraliza o card (ou ajuste conforme necessário)
+            alignment: Alignment.center,
+            child: Container(
+              width: 380,
+              height: 400,
               padding: const EdgeInsets.all(30.0),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -176,70 +45,56 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'imagens/Add_Dispositivo.png', // Mantenha seu caminho
+                    'imagens/Add_Dispositivo.png', //
                     width: 100,
                     height: 100,
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    "Sem dispositivos",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                  const Text("Sem dispositivos", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 15),
-                  const Text(
-                    "Conecte-se ao alimentador\nVia Wi-Fi",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                  const Spacer(), // Empurra o botão para baixo
+                  const Text("Conecte-se ao alimentador\nVia Wi-Fi", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  const Spacer(),
                   ElevatedButton.icon(
                     onPressed: () {
-                      setState(() {
-                        _showPopup = true; // Mostra o popup
-                      });
+                      setState(() { _showPopup = true; });
                     },
                     icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text("Adicionar Dispositivos",
-                        style: TextStyle(color: Colors.white)),
+                    label: const Text("Adicionar Dispositivos", style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF9A825), // Laranja P.O.T.I
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10), // Bordas mais consistentes
-                      ),
-                      textStyle: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                      backgroundColor: const Color(0xFFF9A825),
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 18),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  const SizedBox(height: 20), // Espaço inferior
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
-            const Spacer(), // Empurra o rodapé (se houver) para baixo
-          ],
-        ),
+          ),
+          const Spacer(), // Ocupa espaço se necessário
+        ],
       ),
     );
   }
 
-  // Função auxiliar para construir o popup de adicionar dispositivo
+  // Função auxiliar para construir o popup de adicionar dispositivo (mantida)
   Widget _buildAddDevicePopup(BuildContext context) {
+    // ... (Seu código _buildAddDevicePopup - mantido como está) ...
     return Align(
-      alignment: const Alignment(0.8, 0.6), // Posição ajustada
-      child: Material( // Adicionado Material para sombras e bordas corretas
+      alignment: const Alignment(0.8, 0.6),
+      child: Material(
         elevation: 8.0,
         borderRadius: BorderRadius.circular(20.0),
         child: Container(
-          width: 350, // Largura ajustada
-          // height: 280, // Altura pode ser dinâmica
+          width: 350,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.0),
           ),
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Para se ajustar ao conteúdo
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -252,10 +107,7 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () {
-                      setState(() {
-                        _showPopup = false; // Fecha o popup
-                        _permGranted = false; // Reseta a permissão ao fechar (opcional)
-                      });
+                      setState(() { _showPopup = false; _permGranted = false; });
                     },
                     splashRadius: 20,
                   )
@@ -272,13 +124,8 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _permGranted = true;
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF9A825)),
+                        onPressed: () { setState(() { _permGranted = true; }); },
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF9A825)),
                         child: const Text("Conceder Permissão", style: TextStyle(color: Colors.white)),
                       ),
                     ),
@@ -296,13 +143,9 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                       child: ElevatedButton(
                         onPressed: () {
                           print("Dispositivo cadastrado");
-                          setState(() {
-                            _showPopup = false;
-                            _permGranted = false;
-                          });
+                          setState(() { _showPopup = false; _permGranted = false; });
                         },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF9A825)),
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF9A825)),
                         child: const Text("Cadastrar", style: TextStyle(color: Colors.white)),
                       ),
                     ),
@@ -316,15 +159,16 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
     );
   }
 
-  // Widget auxiliar para criar campos de texto (como em CadastroPetsPage)
+  // Widget auxiliar para criar campos de texto (mantido)
   Widget _buildTextField(String label, String hint, TextEditingController? controller) {
+    // ... (Seu código _buildTextField - mantido como está) ...
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: const TextStyle(
-            fontSize: 14, // Menor para o popup
+            fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -334,7 +178,7 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
           decoration: InputDecoration(
             hintText: hint,
             filled: true,
-            fillColor: const Color(0xFFF3F4F6), // Cinza bem claro
+            fillColor: const Color(0xFFF3F4F6),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
               borderSide: BorderSide.none,
@@ -346,52 +190,58 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
     );
   }
 
-
-  // Função auxiliar para construir o rodapé
-  Widget _buildFooter() {
-    return Container(
-      height: 60,
-      width: double.infinity,
-      color: const Color(0xFFF9A825), // Laranja P.O.T.I
-      padding: const EdgeInsets.symmetric(horizontal: 50), // Alinhado com o conteúdo
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.end, // Alinhado à direita
-        children: [
-          Text("Siga nas redes sociais", style: TextStyle(color: Colors.white)),
-          SizedBox(width: 15),
-          Icon(Icons.camera_alt_outlined, color: Colors.white), // Instagram
-          SizedBox(width: 15),
-          Icon(Icons.alternate_email_outlined, color: Colors.white), // Twitter/X
-          SizedBox(width: 15),
-          Icon(Icons.facebook_outlined, color: Colors.white), // Facebook
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Detecta se a tela é grande (web/tablet) ou pequena (mobile)
+    final bool isDesktop = MediaQuery.of(context).size.width >= 1024;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA), // Cor de fundo principal
-      body: Stack( // Usando Stack para permitir o popup sobreposto
+      key: _scaffoldKey, // Adiciona a chave ao Scaffold
+      backgroundColor: const Color(0xFFFAFAFA),
+      // Mostra o AppBar apenas se NÃO for desktop (ou sempre, se preferir)
+      appBar: isDesktop
+          ? null // Não mostra AppBar em telas grandes
+          : AppBar(
+        backgroundColor: Colors.white,
+        elevation: 1.0,
+        iconTheme: const IconThemeData(color: Colors.black54), // Cor do ícone do menu
+        title: Row( // Título com Logo
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('imagens/logo_sem_fundo.png', height: 30), //
+            const SizedBox(width: 8),
+            const Text('P.O.T.I', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        centerTitle: true,
+      ),
+      // Usa o AppDrawer que criamos
+      drawer: const SideMenu(),
+      body: Stack(
         children: [
-          Column(
+          Row(
             children: [
+              // Mostra o Drawer permanentemente se for desktop
+              if (isDesktop) const SideMenu(),
+              // Conteúdo principal agora usa Expanded
               Expanded(
-                child: Row(
-                  children: [
-                    _buildSidebar(context), // Menu Lateral
-                    _buildContentArea(context), // Conteúdo Principal
-                  ],
-                ),
+                child: _buildContentArea(context),
               ),
-              _buildFooter(), // Rodapé
             ],
           ),
-          // Mostra o popup se _showPopup for verdadeiro
+          // Mostra o popup se _showPopup for verdadeiro (mantido)
           if (_showPopup) _buildAddDevicePopup(context),
         ],
       ),
+      // Adiciona um botão flutuante para abrir o Drawer em telas grandes
+      // (Se não houver AppBar) - OPCIONAL
+      floatingActionButton: isDesktop ? FloatingActionButton(
+        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        backgroundColor: Color(0xFFF9A825),
+        child: Icon(Icons.menu, color: Colors.white),
+        mini: true,
+      ) : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startTop, // Posição do FAB
     );
   }
 }
