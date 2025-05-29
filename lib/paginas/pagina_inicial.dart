@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:projetoflutter/paginas/cadastro_pet.dart';
-import 'package:projetoflutter/widgets/side_bar_menu.dart'; // <-- IMPORTA O NOVO DRAWER
+import 'package:projetoflutter/widgets/side_bar_menu.dart';
+import 'package:projetoflutter/widgets/app_bar_poti.dart';
+import 'package:projetoflutter/paginas/tela_dispositivo_conectado.dart';
 
 class PaginaInicialRefatorada extends StatefulWidget {
   const PaginaInicialRefatorada({super.key});
@@ -12,9 +13,8 @@ class PaginaInicialRefatorada extends StatefulWidget {
 class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
   bool _permGranted = false;
   bool _showPopup = false;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // Chave para controlar o Scaffold
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Função para construir a área de conteúdo principal (agora é o body)
   Widget _buildContentArea(BuildContext context) {
     return Container(
       color: const Color(0xFFFAFAFA),
@@ -22,8 +22,7 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card "Sem Dispositivos"
-          Align( // Centraliza o card (ou ajuste conforme necessário)
+          Align(
             alignment: Alignment.center,
             child: Container(
               width: 380,
@@ -45,7 +44,7 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'imagens/Add_Dispositivo.png', //
+                    'imagens/Add_Dispositivo.png',
                     width: 100,
                     height: 100,
                   ),
@@ -72,22 +71,81 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
               ),
             ),
           ),
-          const Spacer(), // Ocupa espaço se necessário
+          const Spacer(),
         ],
       ),
     );
   }
 
-  // Função auxiliar para construir o popup de adicionar dispositivo (mantida)
   Widget _buildAddDevicePopup(BuildContext context) {
-    // ... (Seu código _buildAddDevicePopup - mantido como está) ...
+    Widget popupContent;
+    Alignment alignment;
+    double containerWidth;
+    double? containerHeight;
+
+    if (!_permGranted) {
+      alignment = const Alignment(0.85, 0.0);
+      containerWidth = 350;
+      containerHeight = null;
+      popupContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("Precisamos da sua permissão para procurar\ndispositivos P.O.T.I próximos.", style: TextStyle(fontSize: 14)),
+          const SizedBox(height: 25),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: () { setState(() { _permGranted = true; }); },
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF9A825)),
+              child: const Text("Conceder Permissão", style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      );
+    } else {
+      alignment = const Alignment(0.0, 0.6);
+      containerWidth = 500;
+      containerHeight = 300.0;
+      popupContent = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildTextField('Nome do Dispositivo', 'Ex: Poti Cozinha', null),
+          const SizedBox(height: 15),
+          _buildTextField('ID do Dispositivo', 'Ex: POTI-123456', null),
+          const SizedBox(height: 25),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: () {
+                // ignore: avoid_print
+                print("Dispositivo cadastrado - Conexão Fictícia");
+                setState(() {
+                  _showPopup = false;
+                  _permGranted = false;
+                });
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const TelaDispositivoConectado()),
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF9A825)),
+              child: const Text("Cadastrar", style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Align(
-      alignment: const Alignment(0.8, 0.6),
+      alignment: alignment,
       child: Material(
         elevation: 8.0,
         borderRadius: BorderRadius.circular(20.0),
         child: Container(
-          width: 350,
+          width: containerWidth,
+          height: containerHeight,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.0),
@@ -115,43 +173,11 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
               ),
               const Divider(),
               const SizedBox(height: 15),
-              if (!_permGranted)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Precisamos da sua permissão para procurar\ndispositivos P.O.T.I próximos.", style: TextStyle(fontSize: 14)),
-                    const SizedBox(height: 25),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton(
-                        onPressed: () { setState(() { _permGranted = true; }); },
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF9A825)),
-                        child: const Text("Conceder Permissão", style: TextStyle(color: Colors.white)),
-                      ),
-                    ),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    _buildTextField('Nome do Dispositivo', 'Ex: Poti Cozinha', null),
-                    const SizedBox(height: 15),
-                    _buildTextField('ID do Dispositivo', 'Ex: POTI-123456', null),
-                    const SizedBox(height: 25),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          print("Dispositivo cadastrado");
-                          setState(() { _showPopup = false; _permGranted = false; });
-                        },
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF9A825)),
-                        child: const Text("Cadastrar", style: TextStyle(color: Colors.white)),
-                      ),
-                    ),
-                  ],
+              Flexible(
+                child: SingleChildScrollView(
+                  child: popupContent,
                 ),
-              const SizedBox(height: 10),
+              ),
             ],
           ),
         ),
@@ -159,9 +185,7 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
     );
   }
 
-  // Widget auxiliar para criar campos de texto (mantido)
   Widget _buildTextField(String label, String hint, TextEditingController? controller) {
-    // ... (Seu código _buildTextField - mantido como está) ...
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -192,56 +216,19 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
 
   @override
   Widget build(BuildContext context) {
-    // Detecta se a tela é grande (web/tablet) ou pequena (mobile)
-    final bool isDesktop = MediaQuery.of(context).size.width >= 1024;
-
     return Scaffold(
-      key: _scaffoldKey, // Adiciona a chave ao Scaffold
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFFAFAFA),
-      // Mostra o AppBar apenas se NÃO for desktop (ou sempre, se preferir)
-      appBar: isDesktop
-          ? null // Não mostra AppBar em telas grandes
-          : AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1.0,
-        iconTheme: const IconThemeData(color: Colors.black54), // Cor do ícone do menu
-        title: Row( // Título com Logo
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset('imagens/logo_sem_fundo.png', height: 30), //
-            const SizedBox(width: 8),
-            const Text('P.O.T.I', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        centerTitle: true,
+      appBar: AppBarPoti(
+        scaffoldKey: _scaffoldKey,
       ),
-      // Usa o AppDrawer que criamos
       drawer: const SideMenu(),
       body: Stack(
         children: [
-          Row(
-            children: [
-              // Mostra o Drawer permanentemente se for desktop
-              if (isDesktop) const SideMenu(),
-              // Conteúdo principal agora usa Expanded
-              Expanded(
-                child: _buildContentArea(context),
-              ),
-            ],
-          ),
-          // Mostra o popup se _showPopup for verdadeiro (mantido)
+          _buildContentArea(context),
           if (_showPopup) _buildAddDevicePopup(context),
         ],
       ),
-      // Adiciona um botão flutuante para abrir o Drawer em telas grandes
-      // (Se não houver AppBar) - OPCIONAL
-      floatingActionButton: isDesktop ? FloatingActionButton(
-        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-        backgroundColor: Color(0xFFF9A825),
-        child: Icon(Icons.menu, color: Colors.white),
-        mini: true,
-      ) : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.startTop, // Posição do FAB
     );
   }
 }
