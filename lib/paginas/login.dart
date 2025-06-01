@@ -1,10 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart'; // Importa o Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+// Importe a PaginaInicialRefatorada para navegação direta
 import 'package:projetoflutter/paginas/pagina_inicial.dart';
-
-
-import '../home.dart';
+import '../home.dart'; // Para CadastroPage (link "FAZER CADASTRO")
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -14,31 +13,28 @@ class Login extends StatefulWidget {
 }
 
 class _LoginPageState extends State<Login> {
-  // Remove o _nomeController, não é usado no login
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
   bool _mostrarSenha = false;
 
-  // Função para fazer o login
   void _logarUsuario() async {
     String email = _emailController.text.trim();
     String senha = _senhaController.text.trim();
 
     if (email.isNotEmpty && senha.isNotEmpty) {
       try {
-        // Tenta fazer o login com email e senha
         UserCredential userCredential = await FirebaseAuth.instance
             .signInWithEmailAndPassword(email: email, password: senha);
 
-        // Se o login der certo, vai pra PaginaInicial
         if (userCredential.user != null) {
-          Navigator.pushReplacement( // Use pushReplacement para não voltar pra tela de login
+          // Alterado de volta para MaterialPageRoute para evitar problemas com rotas nomeadas não configuradas
+          // Isso garante que vá para PaginaInicialRefatorada.
+          Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => PaginaInicialRefatorada()),
+            MaterialPageRoute(builder: (context) => const PaginaInicialRefatorada()),
           );
         }
       } on FirebaseAuthException catch (e) {
-        // Trata os erros de login
         String mensagemErro = 'Erro ao fazer login.';
         if (e.code == 'user-not-found') {
           mensagemErro = 'Nenhum usuário encontrado com este e-mail.';
@@ -51,13 +47,11 @@ class _LoginPageState extends State<Login> {
           SnackBar(content: Text(mensagemErro)),
         );
       } catch (e) {
-        // Trata outros erros
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ocorreu um erro inesperado.')),
         );
       }
     } else {
-      // Pede pra preencher tudo
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, preencha e-mail e senha.')),
       );
@@ -75,11 +69,12 @@ class _LoginPageState extends State<Login> {
             child: Container(
               width: double.infinity,
               constraints: const BoxConstraints(maxWidth: 1200),
-              margin: const EdgeInsets.only(bottom: 200),
+              margin: const EdgeInsets.only(bottom: 200), // Ajuste para centralizar melhor o formulário
               child: isMobile
                   ? _buildVerticalLayout()
                   : Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceAround, // Ajustado para melhor espaçamento
+                crossAxisAlignment: CrossAxisAlignment.center, // Centraliza verticalmente
                 children: [
                   Expanded(flex: 4, child: _buildLogoSection()),
                   const SizedBox(width: 20),
@@ -94,13 +89,18 @@ class _LoginPageState extends State<Login> {
   }
 
   Widget _buildVerticalLayout() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildLogoSection(),
-        const SizedBox(height: 20),
-        _buildFormSection(),
-      ],
+    return SingleChildScrollView( // Adicionado para evitar overflow em telas menores
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Espaçamento superior
+          _buildLogoSection(),
+          const SizedBox(height: 30),
+          _buildFormSection(),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Espaçamento inferior
+        ],
+      ),
     );
   }
 
@@ -108,7 +108,7 @@ class _LoginPageState extends State<Login> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Image.asset('imagens/logo_sem_fundo.png', width: 250), //
+        Image.asset('imagens/logo_sem_fundo.png', width: 200), // Ajuste no tamanho da imagem
         const SizedBox(height: 16),
         const Text(
           'P.O.T.I',
@@ -131,8 +131,8 @@ class _LoginPageState extends State<Login> {
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 4),
+            blurRadius: 10, // Aumentado o blur para suavizar a sombra
+            offset: Offset(0, 5), // Ajustado o offset da sombra
           ),
         ],
       ),
@@ -143,60 +143,65 @@ class _LoginPageState extends State<Login> {
             'Bem-vindo ao P.O.T.I',
             style: TextStyle(
               color: Color(0xFFD4842C),
-              fontSize: 30,
-              fontFamily: 'RobotoSlab',
+              fontSize: 28, // Ajustado tamanho da fonte
+              fontFamily: 'RobotoSlab', // Certifique-se que esta fonte está no pubspec.yaml se for customizada
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           const Text(
             'Entre com sua Conta!',
             style: TextStyle(
               color: Color(0xFFD4842C),
-              fontSize: 20,
+              fontSize: 18, // Ajustado tamanho da fonte
               fontFamily: 'RobotoSlab',
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 25),
           _buildTextField(
               'Email', _emailController, TextInputType.emailAddress),
-          _buildPasswordField(),
+          _buildPasswordField(), // Este já tem um Padding
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed:
-              _logarUsuario, // Chama a função _logarUsuario ao pressionar
+              onPressed: _logarUsuario,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD4842C),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 15), // Aumentado o padding vertical
+                shape: RoundedRectangleBorder( // Adicionado para bordas arredondadas
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text(
                 'Entrar',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 15),
           Text.rich(
             TextSpan(
               text: 'Não tem uma conta? ',
+              style: const TextStyle(color: Colors.black54), // Cor ajustada para melhor leitura
               children: [
                 TextSpan(
                     text: 'FAZER CADASTRO',
                     style: const TextStyle(
                       color: Color(0xFFD4842C),
                       fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline, // Adicionado sublinhado para indicar clicabilidade
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => CadastroPage()),
+                              builder: (context) => const CadastroPage()),
                         );
                       }),
               ],
             ),
+            textAlign: TextAlign.center, // Centralizado o texto
           ),
         ],
       ),
@@ -207,21 +212,20 @@ class _LoginPageState extends State<Login> {
       String label, TextEditingController controller, TextInputType type) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 5),
-          TextField(
-            controller: controller,
-            keyboardType: type,
-            decoration: InputDecoration(
-              contentPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
-            ),
+      child: TextField( // Simplificado para usar labelText
+        controller: controller,
+        keyboardType: type,
+        decoration: InputDecoration(
+          labelText: label, // Usando labelText
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 15, vertical: 12), // Ajustado padding
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)), // Bordas arredondadas
+          focusedBorder: OutlineInputBorder( // Borda quando focado
+            borderSide: const BorderSide(color: Color(0xFFD4842C), width: 2.0),
+            borderRadius: BorderRadius.circular(8),
           ),
-        ],
+          floatingLabelStyle: const TextStyle(color: Color(0xFFD4842C)), // Cor do label quando flutuando
+        ),
       ),
     );
   }
@@ -229,49 +233,33 @@ class _LoginPageState extends State<Login> {
   Widget _buildPasswordField() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _senhaController,
-              obscureText: !_mostrarSenha,
-              decoration: const InputDecoration(
-                hintText: 'Senha',
-                contentPadding:
-                EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(5),
-                    bottomLeft: Radius.circular(5),
-                  ),
-                ),
-              ),
-            ),
+      child: TextField(
+        controller: _senhaController,
+        obscureText: !_mostrarSenha,
+        decoration: InputDecoration(
+          labelText: 'Senha', // Usando labelText
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
           ),
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Color(0xFFCCCCCC)),
-                bottom: BorderSide(color: Color(0xFFCCCCCC)),
-                right: BorderSide(color: Color(0xFFCCCCCC)),
-              ),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(5),
-                bottomRight: Radius.circular(5),
-              ),
-            ),
-            child: IconButton(
-              icon: Icon(
-                _mostrarSenha ? Icons.visibility_off : Icons.visibility,
-              ),
-              onPressed: () {
-                setState(() {
-                  _mostrarSenha = !_mostrarSenha;
-                });
-              },
-            ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: Color(0xFFD4842C), width: 2.0),
+            borderRadius: BorderRadius.circular(8),
           ),
-        ],
+          floatingLabelStyle: const TextStyle(color: Color(0xFFD4842C)),
+          suffixIcon: IconButton( // Ícone para mostrar/ocultar senha
+            icon: Icon(
+              _mostrarSenha ? Icons.visibility_off : Icons.visibility,
+              color: Colors.grey,
+            ),
+            onPressed: () {
+              setState(() {
+                _mostrarSenha = !_mostrarSenha;
+              });
+            },
+          ),
+        ),
       ),
     );
   }

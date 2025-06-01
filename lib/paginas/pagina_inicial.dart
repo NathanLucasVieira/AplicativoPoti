@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:projetoflutter/widgets/side_bar_menu.dart';
 import 'package:projetoflutter/widgets/app_bar_poti.dart';
+// Importe a TelaDispositivoConectado para navegação direta
 import 'package:projetoflutter/paginas/tela_dispositivo_conectado.dart';
 
 class PaginaInicialRefatorada extends StatefulWidget {
   const PaginaInicialRefatorada({super.key});
 
   @override
-  State<PaginaInicialRefatorada> createState() => _PaginaInicialRefatoradaState();
+  State<PaginaInicialRefatorada> createState() =>
+      _PaginaInicialRefatoradaState();
 }
 
 class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
@@ -49,21 +51,31 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                     height: 100,
                   ),
                   const SizedBox(height: 20),
-                  const Text("Sem dispositivos", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text("Sem dispositivos",
+                      style:
+                      TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 15),
-                  const Text("Conecte-se ao alimentador\nVia Wi-Fi", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  const Text("Conecte-se ao alimentador\nVia Wi-Fi",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Colors.grey)),
                   const Spacer(),
                   ElevatedButton.icon(
                     onPressed: () {
-                      setState(() { _showPopup = true; });
+                      setState(() {
+                        _showPopup = true;
+                      });
                     },
                     icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text("Adicionar Dispositivos", style: TextStyle(color: Colors.white)),
+                    label: const Text("Adicionar Dispositivos",
+                        style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF9A825),
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 18),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      textStyle: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -91,14 +103,22 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text("Precisamos da sua permissão para procurar\ndispositivos P.O.T.I próximos.", style: TextStyle(fontSize: 14)),
+          const Text(
+              "Precisamos da sua permissão para procurar\ndispositivos P.O.T.I próximos.",
+              style: TextStyle(fontSize: 14)),
           const SizedBox(height: 25),
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton(
-              onPressed: () { setState(() { _permGranted = true; }); },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF9A825)),
-              child: const Text("Conceder Permissão", style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                setState(() {
+                  _permGranted = true;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF9A825)),
+              child: const Text("Conceder Permissão",
+                  style: TextStyle(color: Colors.white)),
             ),
           ),
         ],
@@ -106,7 +126,7 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
     } else {
       alignment = const Alignment(0.0, 0.6);
       containerWidth = 500;
-      containerHeight = 300.0;
+      containerHeight = 300.0; // Altura ajustável se necessário
       popupContent = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -124,14 +144,17 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                   _showPopup = false;
                   _permGranted = false;
                 });
+                // Alterado de volta para MaterialPageRoute para consistência com main.dart simplificado
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                       builder: (context) => const TelaDispositivoConectado()),
                 );
               },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF9A825)),
-              child: const Text("Cadastrar", style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF9A825)),
+              child: const Text("Cadastrar",
+                  style: TextStyle(color: Colors.white)),
             ),
           ),
         ],
@@ -145,27 +168,33 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
         borderRadius: BorderRadius.circular(20.0),
         child: Container(
           width: containerWidth,
-          height: containerHeight,
+          height: containerHeight, // Pode ser null para altura automática
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.0),
           ),
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min, // Importante se height for null
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    !_permGranted ? "Permissão Necessária" : "Cadastro de Dispositivo",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    !_permGranted
+                        ? "Permissão Necessária"
+                        : "Cadastro de Dispositivo",
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () {
-                      setState(() { _showPopup = false; _permGranted = false; });
+                      setState(() {
+                        _showPopup = false;
+                        _permGranted = false;
+                      });
                     },
                     splashRadius: 20,
                   )
@@ -173,6 +202,7 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
               ),
               const Divider(),
               const SizedBox(height: 15),
+              // Flexible é útil se o conteúdo puder exceder a altura
               Flexible(
                 child: SingleChildScrollView(
                   child: popupContent,
@@ -185,7 +215,8 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController? controller) {
+  Widget _buildTextField(
+      String label, String hint, TextEditingController? controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -207,7 +238,8 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
               borderRadius: BorderRadius.circular(10.0),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            contentPadding:
+            const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
           ),
         ),
       ],
