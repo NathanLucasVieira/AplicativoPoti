@@ -1,11 +1,12 @@
+// lib/widgets/pet_card.dart
 import 'package:flutter/material.dart';
 
 class Pet {
   final String id;
   final String nome;
   final String raca;
-  final String? fotoUrl; // URL da imagem do pet
-  final String? tamanho; // Ex: "Pequeno", "Médio", "Grande"
+  final String? fotoUrl;
+  final String? tamanho; // No Firestore, este campo pode ter sido salvo como 'peso'
 
   Pet({
     required this.id,
@@ -21,11 +22,14 @@ class Pet {
       nome: data['nome'] as String? ?? 'Nome não informado',
       raca: data['raca'] as String? ?? 'Raça não informada',
       fotoUrl: data['fotoUrl'] as String?,
-      tamanho: data['peso'] as String? ?? 'Tamanho não informado', // 'peso' no Firestore representa 'tamanho'
+      // Prioriza o campo 'peso', depois 'tamanho', depois um default.
+      // Isso é para compatibilidade com a tela de cadastro de pet que usava 'peso'.
+      tamanho: data['peso'] as String? ?? data['tamanho'] as String? ?? 'Tamanho não informado',
     );
   }
 }
 
+// O restante do seu widget PetCard continua aqui...
 class PetCard extends StatelessWidget {
   final Pet pet;
   final bool isSelected;
@@ -90,6 +94,7 @@ class PetCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
+                  // Usa o campo 'tamanho' da classe Pet, que já foi tratado no fromMap
                   "Tamanho: ${pet.tamanho}",
                   style: TextStyle(fontSize: 14, color: secondaryTextColor),
                   overflow: TextOverflow.ellipsis,

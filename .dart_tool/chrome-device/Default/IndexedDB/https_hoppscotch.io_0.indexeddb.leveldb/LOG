@@ -1,6 +1,0 @@
-2025/05/27-09:03:25.877 20cc Creating DB C:\Users\Fatec\AppData\Local\Temp\flutter_tools.88b51c93\flutter_tools_chrome_device.f3bfe4e7\Default\IndexedDB\https_hoppscotch.io_0.indexeddb.leveldb since it was missing.
-2025/05/27-09:03:25.883 20cc Reusing MANIFEST C:\Users\Fatec\AppData\Local\Temp\flutter_tools.88b51c93\flutter_tools_chrome_device.f3bfe4e7\Default\IndexedDB\https_hoppscotch.io_0.indexeddb.leveldb/MANIFEST-000001
-2025/05/27-09:03:25.892 1a4c Level-0 table #5: started
-2025/05/27-09:03:25.897 1a4c Level-0 table #5: 1288 bytes OK
-2025/05/27-09:03:25.899 1a4c Delete type=0 #3
-2025/05/27-09:03:25.899 20cc Manual compaction at level-0 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)

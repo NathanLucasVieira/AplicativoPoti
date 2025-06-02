@@ -1,7 +1,11 @@
+// lib/paginas/alimentar_manual_page.dart
 import 'package:flutter/material.dart';
 import 'package:projetoflutter/widgets/app_bar_poti.dart';
 import 'package:projetoflutter/widgets/side_bar_menu.dart';
-import 'package:projetoflutter/paginas/historico_alimentacao_page.dart'; // Importação garantida
+import 'package:projetoflutter/paginas/historico_alimentacao_page.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Adicionado
+import 'package:cloud_firestore/cloud_firestore.dart'; // Adicionado
+import 'package:projetoflutter/paginas/cadastrar_rotina_page.dart'; // Adicionado para navegação
 
 class AlimentarManualPage extends StatefulWidget {
   const AlimentarManualPage({super.key});
@@ -15,10 +19,14 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
   final TextEditingController _quantidadeController = TextEditingController();
   String _quantidadeSelecionadaDisplay = "0g";
 
+  final FirebaseAuth _auth = FirebaseAuth.instance; // Adicionado
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Adicionado
+  bool _isLoading = false; // Adicionado
+
   @override
   void initState() {
     super.initState();
-    _quantidadeController.text = "100";
+    _quantidadeController.text = "100"; // Valor padrão
     _updateQuantidadeDisplay();
     _quantidadeController.addListener(_updateQuantidadeDisplay);
   }
@@ -26,38 +34,94 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
   void _updateQuantidadeDisplay() {
     final textValue = _quantidadeController.text;
     if (textValue.isEmpty) {
-      setState(() {
-        _quantidadeSelecionadaDisplay = "0g";
-      });
-    } else {
-      final isNumeric = double.tryParse(textValue) != null;
-      if (isNumeric) {
+      if (mounted) {
         setState(() {
-          _quantidadeSelecionadaDisplay = "${textValue}g";
+          _quantidadeSelecionadaDisplay = "0g";
         });
+      }
+    } else {
+      final numericValue = double.tryParse(textValue);
+      if (numericValue != null) {
+        if (mounted) {
+          setState(() {
+            // Mostra como inteiro se não tiver casas decimais, ou com uma casa decimal se tiver.
+            _quantidadeSelecionadaDisplay = numericValue % 1 == 0 ? "${numericValue.toInt()}g" : "${numericValue.toStringAsFixed(1)}g";
+          });
+        }
       }
     }
   }
 
-  void _alimentarAgora() {
-    final quantidade = _quantidadeController.text;
-    if (quantidade.isNotEmpty &&
-        double.tryParse(quantidade) != null &&
-        double.parse(quantidade) > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Alimentando com $quantidade gramas... (simulado)')),
-      );
+  Future<void> _alimentarAgora() async {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Usuário não autenticado. Faça login para continuar.'),
+              backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+
+    final quantidadeText = _quantidadeController.text;
+    final double? quantidade = double.tryParse(quantidadeText);
+
+    if (quantidade != null && quantidade > 0) {
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
+
+      try {
+        await _firestore.collection('historico_alimentacao').add({
+          'userId': currentUser.uid,
+          'dataHora': Timestamp.now(),
+          'tipo': 'Alimentação Manual', // Tipo específico para esta ação
+          'quantidade': quantidade,
+          'petNome': '', // Deixar em branco ou adicionar lógica de seleção de pet se necessário
+          'concluido': true, // Alimentação manual é sempre concluída imediatamente
+          'criadoEm': Timestamp.now(),
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Alimentado com ${quantidade % 1 == 0 ? quantidade.toInt() : quantidade.toStringAsFixed(1)}g. Registro salvo.'),
+                backgroundColor: Colors.green),
+          );
+          _quantidadeController.clear();
+          _updateQuantidadeDisplay(); // Atualiza o display para "0g"
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Erro ao salvar registro: ${e.toString()}'),
+                backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Por favor, insira uma quantidade válida.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Por favor, insira uma quantidade válida.'),
+              backgroundColor: Colors.orange),
+        );
+      }
     }
   }
 
   void _navegarParaHistorico() {
-    // Navegação para a tela de histórico
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const HistoricoAlimentacaoPage()),
@@ -65,8 +129,9 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
   }
 
   void _navegarParaCriarPlano() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Navegar para Criar Plano (TODO)')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CadastrarRotinaPage()),
     );
   }
 
@@ -86,16 +151,16 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
         titleText: "Alimentar Manualmente",
       ),
       drawer: const SideMenu(),
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: const Color(0xFFFAFAFA), // Cor de fundo suave
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: const BoxConstraints(maxWidth: 400), // Limita a largura máxima
             child: Card(
               elevation: 4.0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
+                borderRadius: BorderRadius.circular(15.0), // Bordas arredondadas
               ),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -103,11 +168,11 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Image.asset(
-                      'imagens/logo_sem_fundo.png',
+                      'imagens/logo_sem_fundo.png', // Certifique-se que a imagem existe
                       height: 120,
                       errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.pets,
-                            size: 120, color: Colors.grey);
+                        // Fallback em caso de erro ao carregar a imagem
+                        return const Icon(Icons.pets, size: 120, color: Colors.grey);
                       },
                     ),
                     const SizedBox(height: 20),
@@ -124,14 +189,13 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
                       style: const TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFF9A825),
+                        color: Color(0xFFF9A825), // Cor destaque Poti
                       ),
                     ),
                     const SizedBox(height: 20),
                     TextField(
                       controller: _quantidadeController,
-                      keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
                         labelText: "Ajustar Quantidade (gramas)",
                         hintText: "Ex: 150",
@@ -139,8 +203,7 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                              color: Color(0xFFF9A825), width: 2.0),
+                          borderSide: const BorderSide(color: Color(0xFFF9A825), width: 2.0),
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         labelStyle: const TextStyle(color: Color(0xFFF9A825)),
@@ -150,30 +213,27 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
                       style: const TextStyle(fontSize: 18),
                     ),
                     const SizedBox(height: 30),
-                    ElevatedButton(
+                    _isLoading
+                        ? const CircularProgressIndicator(color: Color(0xFFF9A825))
+                        : ElevatedButton(
                       onPressed: _alimentarAgora,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF9A825),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 50, vertical: 15),
-                        textStyle: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
                         ),
-                        minimumSize: const Size(double.infinity, 50),
+                        minimumSize: const Size(double.infinity, 50), // Botão com largura total
                       ),
-                      child: const Text("Alimentar",
-                          style: TextStyle(color: Colors.white)),
+                      child: const Text("Alimentar", style: TextStyle(color: Colors.white)),
                     ),
                     const SizedBox(height: 15),
                     TextButton.icon(
-                      icon: const Icon(Icons.calendar_today_outlined,
-                          color: Color(0xFFF9A825)),
+                      icon: const Icon(Icons.calendar_today_outlined, color: Color(0xFFF9A825)),
                       label: const Text(
                         "Criar Plano De Alimentação",
-                        style:
-                        TextStyle(color: Color(0xFFF9A825), fontSize: 16),
+                        style: TextStyle(color: Color(0xFFF9A825), fontSize: 16),
                       ),
                       onPressed: _navegarParaCriarPlano,
                       style: TextButton.styleFrom(
@@ -182,14 +242,12 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
                     ),
                     const SizedBox(height: 10),
                     TextButton.icon(
-                      icon:
-                      const Icon(Icons.history, color: Color(0xFFF9A825)),
+                      icon: const Icon(Icons.history, color: Color(0xFFF9A825)),
                       label: const Text(
                         "Ver Histórico de Alimentação",
-                        style:
-                        TextStyle(color: Color(0xFFF9A825), fontSize: 16),
+                        style: TextStyle(color: Color(0xFFF9A825), fontSize: 16),
                       ),
-                      onPressed: _navegarParaHistorico, // Corrigido
+                      onPressed: _navegarParaHistorico,
                       style: TextButton.styleFrom(
                         minimumSize: const Size(double.infinity, 40),
                       ),
