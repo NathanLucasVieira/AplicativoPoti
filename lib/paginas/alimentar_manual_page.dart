@@ -1,11 +1,10 @@
-// lib/paginas/alimentar_manual_page.dart
 import 'package:flutter/material.dart';
 import 'package:projetoflutter/widgets/app_bar_poti.dart';
 import 'package:projetoflutter/widgets/side_bar_menu.dart';
 import 'package:projetoflutter/paginas/historico_alimentacao_page.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Adicionado
-import 'package:cloud_firestore/cloud_firestore.dart'; // Adicionado
-import 'package:projetoflutter/paginas/cadastrar_rotina_page.dart'; // Adicionado para navegação
+import 'package:firebase_auth/firebase_auth.dart'; 
+import 'package:cloud_firestore/cloud_firestore.dart'; 
+import 'package:projetoflutter/paginas/cadastrar_rotina_page.dart'; 
 
 class AlimentarManualPage extends StatefulWidget {
   const AlimentarManualPage({super.key});
@@ -19,14 +18,13 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
   final TextEditingController _quantidadeController = TextEditingController();
   String _quantidadeSelecionadaDisplay = "0g";
 
-  final FirebaseAuth _auth = FirebaseAuth.instance; // Adicionado
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Adicionado
-  bool _isLoading = false; // Adicionado
-
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance; 
+  bool _isLoading = false; 
   @override
   void initState() {
     super.initState();
-    _quantidadeController.text = "100"; // Valor padrão
+    _quantidadeController.text = "100"; 
     _updateQuantidadeDisplay();
     _quantidadeController.addListener(_updateQuantidadeDisplay);
   }

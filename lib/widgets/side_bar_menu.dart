@@ -1,5 +1,4 @@
-// lib/widgets/side_bar_menu.dart
-import 'dart:async'; // IMPORTANTE: Para StreamSubscription
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,6 +9,7 @@ import 'package:projetoflutter/paginas/historico_alimentacao_page.dart';
 import 'package:projetoflutter/paginas/login.dart';
 import 'package:projetoflutter/paginas/cadastrar_rotina_page.dart';
 import 'package:projetoflutter/widgets/pet_card.dart';
+import 'package:projetoflutter/paginas/perfil_page.dart'; 
 
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
@@ -25,38 +25,69 @@ class _SideMenuState extends State<SideMenu> {
   List<Pet> _userPets = [];
   bool _isLoadingPets = false;
   User? _currentUser;
+  String _userDisplayName = "Usuário";
+  String _userDisplayEmail = "Não autenticado";
   bool _isPetListExpanded = true;
-  StreamSubscription<User?>? _authStateChangesSubscription; // Tipo CORRIGIDO
+  StreamSubscription<User?>? _authStateChangesSubscription;
 
   @override
   void initState() {
     super.initState();
-    _currentUser = _auth.currentUser;
-
     _authStateChangesSubscription = _auth.authStateChanges().listen((User? user) {
       if (mounted) {
         setState(() {
           _currentUser = user;
         });
         if (user != null) {
+          _fetchUserDetails();
           _fetchUserPets();
         } else {
           setState(() {
             _userPets = [];
             _isLoadingPets = false;
+            _userDisplayName = "Usuário";
+            _userDisplayEmail = "Não autenticado";
           });
         }
       }
     });
 
+    _currentUser = _auth.currentUser; 
     if (_currentUser != null) {
+      _fetchUserDetails();
       _fetchUserPets();
     }
   }
 
+  Future<void> _fetchUserDetails() async {
+    if (_currentUser == null) return;
+    try {
+      DocumentSnapshot userDoc = await _firestore.collection('usuarios').doc(_currentUser!.uid).get();
+      if (userDoc.exists && userDoc.data() != null) {
+        final data = userDoc.data() as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            _userDisplayName = data['nome'] ?? _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
+            _userDisplayEmail = _currentUser!.email ?? 'Não autenticado';
+          });
+        }
+        return;
+      }
+    } catch (e) {
+      print("Error fetching user name from Firestore: $e");
+    }
+    if (mounted) {
+      setState(() {
+        _userDisplayName = _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
+        _userDisplayEmail = _currentUser!.email ?? 'Não autenticado';
+      });
+    }
+  }
+
+
   @override
   void dispose() {
-    _authStateChangesSubscription?.cancel(); // Agora deve funcionar
+    _authStateChangesSubscription?.cancel();
     super.dispose();
   }
 
@@ -86,7 +117,6 @@ class _SideMenuState extends State<SideMenu> {
       List<Pet> pets = petSnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>?;
         if (data == null) {
-          // ignore: avoid_print
           print("Alerta: Documento de pet com dados nulos encontrado: ${doc.id}");
           return null;
         }
@@ -100,7 +130,6 @@ class _SideMenuState extends State<SideMenu> {
         });
       }
     } catch (e) {
-      // ignore: avoid_print
       print("Erro ao buscar pets para o SideMenu: $e");
       if (mounted) {
         setState(() {
@@ -112,7 +141,6 @@ class _SideMenuState extends State<SideMenu> {
       }
     }
   }
-
   Widget _buildMenuItem(BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       leading: Icon(
@@ -153,7 +181,7 @@ class _SideMenuState extends State<SideMenu> {
             MaterialPageRoute(builder: (context) => const CadastroPetsPage()),
           ).then((_) {
             if (_currentUser != null) {
-              _fetchUserPets();
+              _fetchUserPets(); 
             }
           });
         },
@@ -178,7 +206,6 @@ class _SideMenuState extends State<SideMenu> {
       ),
     );
   }
-
   Widget _buildPetListItem(BuildContext context, Pet pet) {
     return ListTile(
       leading: Icon(Icons.pets_outlined, color: const Color(0xFFF9A825), size: 22),
@@ -330,8 +357,9 @@ class _SideMenuState extends State<SideMenu> {
                   child: Divider(height: 1, thickness: 1),
                 ),
                 _buildMenuItem(context, Icons.person_outline, 'Meu Perfil', () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Navegar para Meu Perfil (TODO)')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PerfilPage()),
                   );
                 }),
                 _buildMenuItem(context, Icons.settings_outlined, 'Configurações', () {
@@ -356,7 +384,7 @@ class _SideMenuState extends State<SideMenu> {
                     CircleAvatar(
                       backgroundColor: const Color(0xFFF9A825).withOpacity(0.8),
                       child: Text(
-                          _currentUser?.displayName?.substring(0, 1).toUpperCase() ?? _currentUser?.email?.substring(0, 1).toUpperCase() ?? 'U',
+                          _userDisplayName.isNotEmpty ? _userDisplayName[0].toUpperCase() : "U",
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
                       ),
                     ),
@@ -366,12 +394,12 @@ class _SideMenuState extends State<SideMenu> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _currentUser?.displayName ?? _currentUser?.email?.split('@')[0] ?? 'Usuário',
+                            _userDisplayName,
                             style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            _currentUser?.email ?? 'Não autenticado',
+                            _userDisplayEmail,
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.grey.shade700),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -382,11 +410,16 @@ class _SideMenuState extends State<SideMenu> {
                       icon: Icon(Icons.exit_to_app_outlined, color: Colors.grey.shade600),
                       onPressed: () async {
                         await _auth.signOut();
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const Login()),
-                              (Route<dynamic> route) => false,
-                        );
+                        if (mounted && Navigator.canPop(context)) {
+                          Navigator.pop(context); 
+                        }
+                        if (mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => const Login()),
+                                (Route<dynamic> route) => false,
+                          );
+                        }
                       },
                       tooltip: 'Sair',
                       iconSize: 22,
@@ -395,7 +428,7 @@ class _SideMenuState extends State<SideMenu> {
                 ),
               ),
             )
-          else
+          else // Show Login Button if no user
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextButton.icon(

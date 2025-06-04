@@ -53,7 +53,7 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
         'nome': nome,
         'raca': raca,
         'tutorId': currentUser.uid,
-        'fotoUrl': null, // Manter fotoUrl como nulo, sem upload
+        'fotoUrl': null,
         'criadoEm': Timestamp.now(),
         'peso': null,
       });
