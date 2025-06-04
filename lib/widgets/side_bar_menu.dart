@@ -10,7 +10,8 @@ import 'package:projetoflutter/paginas/historico_alimentacao_page.dart';
 import 'package:projetoflutter/paginas/login.dart';
 import 'package:projetoflutter/paginas/cadastrar_rotina_page.dart';
 import 'package:projetoflutter/widgets/pet_card.dart';
-import 'package:projetoflutter/paginas/detalhes_pet_page.dart'; // Importar a tela de detalhes do pet
+import 'package:projetoflutter/paginas/detalhes_pet_page.dart'; // For individual pet details
+import 'package:projetoflutter/paginas/perfil_page.dart'; // Import the User Profile page
 
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
@@ -26,8 +27,10 @@ class _SideMenuState extends State<SideMenu> {
   List<Pet> _userPets = [];
   bool _isLoadingPets = false;
   User? _currentUser;
+  String _userDisplayName = "Usuário"; // Added to store display name
+  String _userDisplayEmail = "Não autenticado"; // Added to store display email
   bool _isPetListExpanded = true;
-  StreamSubscription<User?>? _authStateChangesSubscription; // Tipo CORRIGIDO
+  StreamSubscription<User?>? _authStateChangesSubscription;
 
   @override
   void initState() {
@@ -40,24 +43,66 @@ class _SideMenuState extends State<SideMenu> {
           _currentUser = user;
         });
         if (user != null) {
+          _fetchUserDetails(); // Fetch user details when auth state changes
           _fetchUserPets();
         } else {
           setState(() {
             _userPets = [];
             _isLoadingPets = false;
+            _userDisplayName = "Usuário";
+            _userDisplayEmail = "Não autenticado";
           });
         }
       }
     });
 
     if (_currentUser != null) {
+      _fetchUserDetails(); // Initial fetch
       _fetchUserPets();
     }
   }
 
+  Future<void> _fetchUserDetails() async {
+    if (_currentUser == null || !mounted) return;
+
+    // Try to get name from Firestore 'usuarios' collection first
+    try {
+      DocumentSnapshot userDoc = await _firestore.collection('usuarios').doc(_currentUser!.uid).get();
+      if (userDoc.exists && userDoc.data() != null) {
+        final data = userDoc.data() as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            _userDisplayName = data['nome'] ?? _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _userDisplayName = _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
+          });
+        }
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print("Error fetching user name from Firestore: $e");
+      if (mounted) {
+        setState(() { // Fallback to auth display name or email part
+          _userDisplayName = _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
+        });
+      }
+    }
+    // Set email (always available from _currentUser if user is logged in)
+    if (mounted) {
+      setState(() {
+        _userDisplayEmail = _currentUser!.email ?? 'Não autenticado';
+      });
+    }
+  }
+
+
   @override
   void dispose() {
-    _authStateChangesSubscription?.cancel(); // Agora deve funcionar
+    _authStateChangesSubscription?.cancel();
     super.dispose();
   }
 
@@ -123,7 +168,7 @@ class _SideMenuState extends State<SideMenu> {
       ),
       title: Text(
         title,
-        style: const TextStyle( // Adicionado const para otimização
+        style: const TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
           color: Colors.black87,
@@ -131,9 +176,9 @@ class _SideMenuState extends State<SideMenu> {
       ),
       onTap: () {
         if (Navigator.canPop(context)) {
-          Navigator.pop(context);
+          Navigator.pop(context); // Close the drawer
         }
-        onTap();
+        onTap(); // Then execute the onTap action (navigation)
       },
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
@@ -153,7 +198,6 @@ class _SideMenuState extends State<SideMenu> {
             context,
             MaterialPageRoute(builder: (context) => const CadastroPetsPage()),
           ).then((_) {
-            // Após retornar da tela de cadastro de pet, recarrega a lista de pets
             if (_currentUser != null) {
               _fetchUserPets();
             }
@@ -190,7 +234,7 @@ class _SideMenuState extends State<SideMenu> {
       visualDensity: VisualDensity.compact,
       onTap: () {
         if (Navigator.canPop(context)) {
-          Navigator.pop(context); // Fecha o Drawer
+          Navigator.pop(context);
         }
         Navigator.push(
           context,
@@ -198,7 +242,6 @@ class _SideMenuState extends State<SideMenu> {
             builder: (context) => DetalhesPetPage(pet: pet),
           ),
         ).then((result) {
-
           if (result == true && mounted) {
             _fetchUserPets();
           }
@@ -340,8 +383,10 @@ class _SideMenuState extends State<SideMenu> {
                   child: Divider(height: 1, thickness: 1),
                 ),
                 _buildMenuItem(context, Icons.person_outline, 'Meu Perfil', () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Navegar para Meu Perfil (TODO)')),
+                  // Updated to navigate to PerfilPage
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PerfilPage()),
                   );
                 }),
                 _buildMenuItem(context, Icons.settings_outlined, 'Configurações', () {
@@ -366,7 +411,8 @@ class _SideMenuState extends State<SideMenu> {
                     CircleAvatar(
                       backgroundColor: const Color(0xFFF9A825).withOpacity(0.8),
                       child: Text(
-                          _currentUser?.displayName?.substring(0, 1).toUpperCase() ?? _currentUser?.email?.substring(0, 1).toUpperCase() ?? 'U',
+                        // Use _userDisplayName for the avatar initial
+                          _userDisplayName.isNotEmpty ? _userDisplayName[0].toUpperCase() : 'U',
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
                       ),
                     ),
@@ -376,12 +422,12 @@ class _SideMenuState extends State<SideMenu> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _currentUser?.displayName ?? _currentUser?.email?.split('@')[0] ?? 'Usuário',
+                            _userDisplayName, // Use _userDisplayName
                             style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            _currentUser?.email ?? 'Não autenticado',
+                            _userDisplayEmail, // Use _userDisplayEmail
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.grey.shade700),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -392,11 +438,17 @@ class _SideMenuState extends State<SideMenu> {
                       icon: Icon(Icons.exit_to_app_outlined, color: Colors.grey.shade600),
                       onPressed: () async {
                         await _auth.signOut();
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const Login()),
-                              (Route<dynamic> route) => false,
-                        );
+                        // Ensure context is still valid before navigating
+                        if (mounted && Navigator.canPop(context)) {
+                          Navigator.pop(context); // Close drawer if open
+                        }
+                        if (mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => const Login()),
+                                (Route<dynamic> route) => false,
+                          );
+                        }
                       },
                       tooltip: 'Sair',
                       iconSize: 22,
