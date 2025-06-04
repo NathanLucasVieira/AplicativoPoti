@@ -1,4 +1,5 @@
-import 'dart:async';
+// lib/widgets/side_bar_menu.dart
+import 'dart:async'; // IMPORTANTE: Para StreamSubscription
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,7 +10,7 @@ import 'package:projetoflutter/paginas/historico_alimentacao_page.dart';
 import 'package:projetoflutter/paginas/login.dart';
 import 'package:projetoflutter/paginas/cadastrar_rotina_page.dart';
 import 'package:projetoflutter/widgets/pet_card.dart';
-import 'package:projetoflutter/paginas/perfil_page.dart'; 
+import 'package:projetoflutter/paginas/detalhes_pet_page.dart'; // Importar a tela de detalhes do pet
 
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
@@ -25,69 +26,38 @@ class _SideMenuState extends State<SideMenu> {
   List<Pet> _userPets = [];
   bool _isLoadingPets = false;
   User? _currentUser;
-  String _userDisplayName = "Usuário";
-  String _userDisplayEmail = "Não autenticado";
   bool _isPetListExpanded = true;
-  StreamSubscription<User?>? _authStateChangesSubscription;
+  StreamSubscription<User?>? _authStateChangesSubscription; // Tipo CORRIGIDO
 
   @override
   void initState() {
     super.initState();
+    _currentUser = _auth.currentUser;
+
     _authStateChangesSubscription = _auth.authStateChanges().listen((User? user) {
       if (mounted) {
         setState(() {
           _currentUser = user;
         });
         if (user != null) {
-          _fetchUserDetails();
           _fetchUserPets();
         } else {
           setState(() {
             _userPets = [];
             _isLoadingPets = false;
-            _userDisplayName = "Usuário";
-            _userDisplayEmail = "Não autenticado";
           });
         }
       }
     });
 
-    _currentUser = _auth.currentUser; 
     if (_currentUser != null) {
-      _fetchUserDetails();
       _fetchUserPets();
     }
   }
 
-  Future<void> _fetchUserDetails() async {
-    if (_currentUser == null) return;
-    try {
-      DocumentSnapshot userDoc = await _firestore.collection('usuarios').doc(_currentUser!.uid).get();
-      if (userDoc.exists && userDoc.data() != null) {
-        final data = userDoc.data() as Map<String, dynamic>;
-        if (mounted) {
-          setState(() {
-            _userDisplayName = data['nome'] ?? _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
-            _userDisplayEmail = _currentUser!.email ?? 'Não autenticado';
-          });
-        }
-        return;
-      }
-    } catch (e) {
-      print("Error fetching user name from Firestore: $e");
-    }
-    if (mounted) {
-      setState(() {
-        _userDisplayName = _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
-        _userDisplayEmail = _currentUser!.email ?? 'Não autenticado';
-      });
-    }
-  }
-
-
   @override
   void dispose() {
-    _authStateChangesSubscription?.cancel();
+    _authStateChangesSubscription?.cancel(); // Agora deve funcionar
     super.dispose();
   }
 
@@ -117,6 +87,7 @@ class _SideMenuState extends State<SideMenu> {
       List<Pet> pets = petSnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>?;
         if (data == null) {
+          // ignore: avoid_print
           print("Alerta: Documento de pet com dados nulos encontrado: ${doc.id}");
           return null;
         }
@@ -130,6 +101,7 @@ class _SideMenuState extends State<SideMenu> {
         });
       }
     } catch (e) {
+      // ignore: avoid_print
       print("Erro ao buscar pets para o SideMenu: $e");
       if (mounted) {
         setState(() {
@@ -141,6 +113,7 @@ class _SideMenuState extends State<SideMenu> {
       }
     }
   }
+
   Widget _buildMenuItem(BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       leading: Icon(
@@ -150,7 +123,7 @@ class _SideMenuState extends State<SideMenu> {
       ),
       title: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle( // Adicionado const para otimização
           fontSize: 15,
           fontWeight: FontWeight.w500,
           color: Colors.black87,
@@ -180,8 +153,9 @@ class _SideMenuState extends State<SideMenu> {
             context,
             MaterialPageRoute(builder: (context) => const CadastroPetsPage()),
           ).then((_) {
+            // Após retornar da tela de cadastro de pet, recarrega a lista de pets
             if (_currentUser != null) {
-              _fetchUserPets(); 
+              _fetchUserPets();
             }
           });
         },
@@ -206,6 +180,7 @@ class _SideMenuState extends State<SideMenu> {
       ),
     );
   }
+
   Widget _buildPetListItem(BuildContext context, Pet pet) {
     return ListTile(
       leading: Icon(Icons.pets_outlined, color: const Color(0xFFF9A825), size: 22),
@@ -215,11 +190,19 @@ class _SideMenuState extends State<SideMenu> {
       visualDensity: VisualDensity.compact,
       onTap: () {
         if (Navigator.canPop(context)) {
-          Navigator.pop(context);
+          Navigator.pop(context); // Fecha o Drawer
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pet selecionado: ${pet.nome} (Detalhes TODO)')),
-        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetalhesPetPage(pet: pet),
+          ),
+        ).then((result) {
+
+          if (result == true && mounted) {
+            _fetchUserPets();
+          }
+        });
       },
     );
   }
@@ -357,9 +340,8 @@ class _SideMenuState extends State<SideMenu> {
                   child: Divider(height: 1, thickness: 1),
                 ),
                 _buildMenuItem(context, Icons.person_outline, 'Meu Perfil', () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PerfilPage()),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Navegar para Meu Perfil (TODO)')),
                   );
                 }),
                 _buildMenuItem(context, Icons.settings_outlined, 'Configurações', () {
@@ -384,7 +366,7 @@ class _SideMenuState extends State<SideMenu> {
                     CircleAvatar(
                       backgroundColor: const Color(0xFFF9A825).withOpacity(0.8),
                       child: Text(
-                          _userDisplayName.isNotEmpty ? _userDisplayName[0].toUpperCase() : "U",
+                          _currentUser?.displayName?.substring(0, 1).toUpperCase() ?? _currentUser?.email?.substring(0, 1).toUpperCase() ?? 'U',
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
                       ),
                     ),
@@ -394,12 +376,12 @@ class _SideMenuState extends State<SideMenu> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _userDisplayName,
+                            _currentUser?.displayName ?? _currentUser?.email?.split('@')[0] ?? 'Usuário',
                             style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            _userDisplayEmail,
+                            _currentUser?.email ?? 'Não autenticado',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.grey.shade700),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -410,16 +392,11 @@ class _SideMenuState extends State<SideMenu> {
                       icon: Icon(Icons.exit_to_app_outlined, color: Colors.grey.shade600),
                       onPressed: () async {
                         await _auth.signOut();
-                        if (mounted && Navigator.canPop(context)) {
-                          Navigator.pop(context); 
-                        }
-                        if (mounted) {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (context) => const Login()),
-                                (Route<dynamic> route) => false,
-                          );
-                        }
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const Login()),
+                              (Route<dynamic> route) => false,
+                        );
                       },
                       tooltip: 'Sair',
                       iconSize: 22,
@@ -428,7 +405,7 @@ class _SideMenuState extends State<SideMenu> {
                 ),
               ),
             )
-          else // Show Login Button if no user
+          else
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextButton.icon(

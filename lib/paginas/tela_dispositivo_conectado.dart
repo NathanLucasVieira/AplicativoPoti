@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:projetoflutter/widgets/app_bar_poti.dart';
 import 'package:projetoflutter/widgets/side_bar_menu.dart';
 import 'package:projetoflutter/widgets/pet_card.dart';
+import 'package:projetoflutter/paginas/detalhes_pet_page.dart'; // Import da tela de detalhes
 
 class TelaDispositivoConectado extends StatefulWidget {
   const TelaDispositivoConectado({super.key});
@@ -31,6 +32,7 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
   }
 
   Future<void> _fetchUserPets() async {
+    if (!mounted) return;
     setState(() {
       _isLoadingPets = true;
     });
@@ -46,37 +48,48 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
           return Pet.fromMap(doc.data() as Map<String, dynamic>, doc.id);
         }).toList();
 
+        // Ordena os pets alfabeticamente pelo nome para consistência
+        pets.sort((a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()));
+
+        if (!mounted) return;
         setState(() {
           _petsCadastrados = pets;
           _isLoadingPets = false;
-          _currentPage = _petsCadastrados.isNotEmpty ? 0 : 0;
-          if (_pageController.hasClients && _petsCadastrados.isNotEmpty) {
-            _pageController.jumpToPage(0);
-          } else if (_petsCadastrados.isEmpty){
+          // Garante que _currentPage seja válido após o fetch
+          if (_petsCadastrados.isNotEmpty) {
+            _currentPage = _currentPage.clamp(0, _petsCadastrados.length - 1);
+            // Se o pageController já foi criado e tem clientes, anima para a página correta
+            if (_pageController.hasClients) {
+              // Apenas atualiza se a página realmente mudou para evitar saltos desnecessários
+              if(_pageController.page?.round() != _currentPage) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if(_pageController.hasClients) { // Checa novamente por segurança
+                    _pageController.jumpToPage(_currentPage);
+                  }
+                });
+              }
+            }
+          } else {
             _currentPage = 0;
           }
         });
       } catch (e) {
-        // ignore: avoid_print
-        print("Erro ao buscar pets: $e");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar os pets: ${e.toString()}')),
+        );
         setState(() {
           _isLoadingPets = false;
         });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erro ao carregar os pets: ${e.toString()}')),
-          );
-        }
       }
     } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuário não autenticado.')),
+      );
       setState(() {
         _isLoadingPets = false;
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuário não autenticado.')),
-        );
-      }
     }
   }
 
@@ -84,6 +97,20 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _navigateToPetDetails(Pet pet) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetalhesPetPage(pet: pet),
+      ),
+    );
+    if (result == true && mounted) {
+      // Se result for true, significa que houve alteração (salvo ou excluído)
+      // Atualiza a lista de pets
+      _fetchUserPets();
+    }
   }
 
   Widget _buildPetCarousel() {
@@ -118,7 +145,7 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                 );
               },
             )
-                : const SizedBox(width: 48),
+                : const SizedBox(width: 48), // Espaço para alinhar quando não há seta
 
             Expanded(
               child: SizedBox(
@@ -127,11 +154,14 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                   controller: _pageController,
                   itemCount: _petsCadastrados.length,
                   onPageChanged: (int page) {
-                    setState(() {
-                      _currentPage = page;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        _currentPage = page;
+                      });
+                    }
                   },
                   itemBuilder: (context, index) {
+                    final pet = _petsCadastrados[index];
                     return AnimatedBuilder(
                       animation: _pageController,
                       builder: (BuildContext context, Widget? cardWidget) {
@@ -148,11 +178,14 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                           child: cardWidget,
                         );
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: PetCard(
-                          pet: _petsCadastrados[index],
-                          isSelected: index == _currentPage,
+                      child: GestureDetector(
+                        onTap: () => _navigateToPetDetails(pet),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0), // Espaço para a sombra do card
+                          child: PetCard(
+                            pet: pet,
+                            isSelected: index == _currentPage,
+                          ),
                         ),
                       ),
                     );
@@ -170,7 +203,7 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                 );
               },
             )
-                : const SizedBox(width: 48),
+                : const SizedBox(width: 48), // Espaço para alinhar
           ],
         ),
         const SizedBox(height: 12.0),
@@ -185,9 +218,10 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
     List<Widget> indicators = [];
     for (int i = 0; i < _petsCadastrados.length; i++) {
       indicators.add(
-        Container(
-          width: 8.0,
-          height: 8.0,
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: _currentPage == i ? 12.0 : 8.0,
+          height: _currentPage == i ? 12.0 : 8.0,
           margin: const EdgeInsets.symmetric(horizontal: 4.0),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -223,7 +257,7 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
           const Icon(Icons.wifi, size: 40, color: Color(0xFFF9A825)),
           const SizedBox(height: 10),
           const Text(
-            "Alimentador1 conectado",
+            "Alimentador P.O.T.I", // Nome genérico do alimentador
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -231,11 +265,11 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
           ),
           const SizedBox(height: 5),
           Text(
-            "Conectado ao alimentador",
+            "Status: Conectado",
             style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
           ),
           Text(
-            "Via Wi-Fi SUCESSO - 2.4 GHz",
+            "Rede: Wi-Fi SUCESSO - 2.4 GHz", // Exemplo de rede
             style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
         ],
@@ -251,11 +285,11 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
         children: [
           Text('Siga nas Redes sociais'),
           SizedBox(width: 10),
-          Icon(Icons.facebook),
+          Icon(Icons.facebook), // Exemplo de ícone
           SizedBox(width: 10),
-          Icon(Icons.camera_alt_outlined),
+          Icon(Icons.camera_alt_outlined), // Exemplo de ícone
           SizedBox(width: 10),
-          Icon(Icons.alternate_email),
+          Icon(Icons.alternate_email), // Exemplo de ícone
         ],
       ),
     );
@@ -263,97 +297,112 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
 
   @override
   Widget build(BuildContext context) {
+    // Determina o pet selecionado para a AppBar
+    Pet? petSelecionadoParaAppBar;
+    if (_petsCadastrados.isNotEmpty && _currentPage < _petsCadastrados.length) {
+      petSelecionadoParaAppBar = _petsCadastrados[_currentPage];
+    }
+
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBarPoti(
         scaffoldKey: _scaffoldKey,
-        titleText: "Meus Pets",
+        titleText: petSelecionadoParaAppBar == null ? "Meus Pets" : null, // Mostra "Meus Pets" se nenhum pet estiver no carrossel
+        selectedPet: petSelecionadoParaAppBar,
+        onSelectedPetTap: petSelecionadoParaAppBar != null
+            ? () => _navigateToPetDetails(petSelecionadoParaAppBar!)
+            : null,
       ),
       drawer: const SideMenu(),
       backgroundColor: const Color(0xFFFAFAFA),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Seus Pets Cadastrados",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (!_isLoadingPets && _petsCadastrados.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                _petsCadastrados.length.toString(),
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade700),
+      body: RefreshIndicator( // Adicionado RefreshIndicator
+        onRefresh: _fetchUserPets,
+        color: const Color(0xFFF9A825),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // Permite scroll mesmo com pouco conteúdo
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Seus Pets Cadastrados",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                        ],
+                            if (!_isLoadingPets && _petsCadastrados.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  _petsCadastrados.length.toString(),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey.shade700),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        "Veja as informações do seu pet",
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          "Selecione um pet para ver ou editar detalhes.",
+                          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPetCarousel(),
-                    const SizedBox(height: 8.0),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-              Center(child: _buildAlimentadorStatusCard()),
-              const SizedBox(height: 30),
-              _buildSocialMediaFooter(),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0, top: 10),
-                child: Center(
-                  child: Text(
-                    "P.O.T.I\n©2023 Todos os Direitos Reservados",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      const SizedBox(height: 16),
+                      _buildPetCarousel(),
+                      const SizedBox(height: 8.0), // Espaço após o carrossel
+                    ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 30),
+                Center(child: _buildAlimentadorStatusCard()),
+                const SizedBox(height: 30),
+                _buildSocialMediaFooter(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0, top: 10),
+                  child: Center(
+                    child: Text(
+                      "P.O.T.I\n©2024 Todos os Direitos Reservados", // Atualizado o ano
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
