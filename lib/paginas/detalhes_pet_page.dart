@@ -1,13 +1,13 @@
-// lib/paginas/detalhes_pet_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io'; // Para File
+import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:projetoflutter/widgets/app_bar_poti.dart';
 import 'package:projetoflutter/widgets/side_bar_menu.dart';
-import 'package:projetoflutter/widgets/pet_card.dart'; // Para a classe Pet
+import 'package:projetoflutter/widgets/pet_card.dart';
 import 'package:projetoflutter/paginas/tela_dispositivo_conectado.dart';
 
 class DetalhesPetPage extends StatefulWidget {
@@ -45,7 +45,7 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
     _racaController = TextEditingController(text: widget.pet.raca);
     _fotoUrlAtual = widget.pet.fotoUrl;
 
-    // Lógica para mapear o 'tamanho' do pet para uma das opções de dropdown
+
     if (widget.pet.tamanho != null && widget.pet.tamanho!.isNotEmpty) {
       final String tamanhoLower = widget.pet.tamanho!.toLowerCase();
       if (tamanhoLower.contains("pequeno") || tamanhoLower.contains("abaixo 14kg")) {
@@ -55,7 +55,7 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
       } else if (tamanhoLower.contains("grande") || tamanhoLower.contains("acima 25kg")) {
         _tamanhoSelecionado = 'Grande';
       } else {
-        _tamanhoSelecionado = null; // Caso não corresponda a nenhuma opção conhecida
+        _tamanhoSelecionado = null;
       }
     } else {
       _tamanhoSelecionado = null;
@@ -120,7 +120,7 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
       await _firestore.collection('pets').doc(widget.pet.id).update({
         'nome': _nomeController.text.trim(),
         'raca': _racaController.text.trim(),
-        'peso': _tamanhoSelecionado, // Salvando como 'peso' no Firestore
+        'peso': _tamanhoSelecionado,
         'fotoUrl': novaFotoUrl,
         'atualizadoEm': Timestamp.now(),
       });
@@ -134,7 +134,6 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
           _fotoUrlAtual = novaFotoUrl;
           _imagemSelecionada = null;
         });
-        // Retorna true para indicar que a lista de pets precisa ser atualizada na página anterior
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -171,27 +170,24 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
     if (confirmar) {
       if (mounted) setState(() => _isLoading = true);
       try {
-        // Excluir registros de histórico de alimentação associados a este pet
         QuerySnapshot historicoSnapshot = await _firestore
             .collection('historico_alimentacao')
             .where('userId', isEqualTo: _auth.currentUser?.uid)
-            .where('petNome', isEqualTo: widget.pet.nome) // Ou qualquer outro campo que ligue ao pet
+            .where('petNome', isEqualTo: widget.pet.nome)
             .get();
 
         for (DocumentSnapshot doc in historicoSnapshot.docs) {
           await doc.reference.delete();
         }
 
-        // Excluir o documento do pet
+
         await _firestore.collection('pets').doc(widget.pet.id).delete();
 
-        // Excluir imagem do Storage se existir
+
         if (widget.pet.fotoUrl != null && widget.pet.fotoUrl!.isNotEmpty) {
           try {
             await _storage.refFromURL(widget.pet.fotoUrl!).delete();
           } catch (e) {
-            // Ignorar erro se a imagem não existir ou já tiver sido excluída
-            // ignore: avoid_print
             print("Erro ao excluir imagem do storage: $e");
           }
         }
@@ -199,7 +195,6 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('${widget.pet.nome} excluído com sucesso.'), backgroundColor: Colors.orange),
           );
-          // Navega de volta para a tela de pets conectados e limpa a pilha de navegação
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const TelaDispositivoConectado()),
@@ -227,36 +222,35 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
         titleText: _isEditing ? "Editar ${widget.pet.nome}" : "Detalhes de ${widget.pet.nome}",
       ),
       drawer: const SideMenu(),
-      backgroundColor: Colors.grey[100], // Fundo mais suave
+      backgroundColor: Colors.grey[100],
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600), // Limita a largura para tablets/web
+            constraints: const BoxConstraints(maxWidth: 600),
             child: Card(
-              elevation: 8.0, // Sombra mais proeminente
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)), // Bordas mais arredondadas
+              elevation: 8.0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
               color: Colors.white,
               child: Padding(
-                padding: const EdgeInsets.all(30.0), // Padding aumentado
+                padding: const EdgeInsets.all(30.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Seção da imagem do pet
                       Center(
                         child: Stack(
                           alignment: Alignment.bottomRight,
                           children: [
                             Container(
-                              width: 180, // Aumenta o tamanho da imagem
+                              width: 180,
                               height: 180,
                               decoration: BoxDecoration(
                                 color: Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(90), // Torna a imagem um círculo perfeito
-                                border: Border.all(color: const Color(0xFFF9A825), width: 3), // Borda mais grossa
+                                borderRadius: BorderRadius.circular(90),
+                                border: Border.all(color: const Color(0xFFF9A825), width: 3),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.orange.withOpacity(0.3),
@@ -266,15 +260,16 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
                                   ),
                                 ],
                               ),
+                              //A Edição da imagem do pet e de subir, ainda não esta funcionando, Função premiun do firebase
                               child: ClipOval(
-                                child: GestureDetector( // Permite selecionar imagem clicando na foto
+                                child: GestureDetector(
                                   onTap: _isEditing ? _selecionarImagem : null,
                                   child: _imagemSelecionada != null
                                       ? Image.file(_imagemSelecionada!, fit: BoxFit.cover, width: 180, height: 180)
                                       : (_fotoUrlAtual != null && _fotoUrlAtual!.isNotEmpty
                                       ? Image.network(_fotoUrlAtual!, fit: BoxFit.cover, width: 180, height: 180,
                                       errorBuilder: (context, error, stackTrace) =>
-                                          Image.asset('imagens/logo_sem_fundo.png', fit: BoxFit.cover)) // Fallback se NetworkImage falhar
+                                          Image.asset('imagens/logo_sem_fundo.png', fit: BoxFit.cover))
                                       : Image.asset('imagens/logo_sem_fundo.png', fit: BoxFit.cover)
                                   ),
                                 ),

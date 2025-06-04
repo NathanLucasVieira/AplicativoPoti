@@ -192,14 +192,13 @@ class _SideMenuState extends State<SideMenu> {
         if (Navigator.canPop(context)) {
           Navigator.pop(context); // Fecha o Drawer
         }
-        // Navega para a tela de detalhes do pet
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetalhesPetPage(pet: pet),
           ),
         ).then((result) {
-          // Se houver alteração na tela de detalhes (result == true), recarrega os pets
+
           if (result == true && mounted) {
             _fetchUserPets();
           }
