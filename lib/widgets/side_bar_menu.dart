@@ -10,6 +10,7 @@ import 'package:projetoflutter/paginas/historico_alimentacao_page.dart';
 import 'package:projetoflutter/paginas/login.dart';
 import 'package:projetoflutter/paginas/cadastrar_rotina_page.dart';
 import 'package:projetoflutter/widgets/pet_card.dart';
+import 'package:projetoflutter/paginas/detalhes_pet_page.dart'; // Importar a tela de detalhes do pet
 
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
@@ -122,7 +123,7 @@ class _SideMenuState extends State<SideMenu> {
       ),
       title: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle( // Adicionado const para otimização
           fontSize: 15,
           fontWeight: FontWeight.w500,
           color: Colors.black87,
@@ -152,6 +153,7 @@ class _SideMenuState extends State<SideMenu> {
             context,
             MaterialPageRoute(builder: (context) => const CadastroPetsPage()),
           ).then((_) {
+            // Após retornar da tela de cadastro de pet, recarrega a lista de pets
             if (_currentUser != null) {
               _fetchUserPets();
             }
@@ -188,11 +190,20 @@ class _SideMenuState extends State<SideMenu> {
       visualDensity: VisualDensity.compact,
       onTap: () {
         if (Navigator.canPop(context)) {
-          Navigator.pop(context);
+          Navigator.pop(context); // Fecha o Drawer
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pet selecionado: ${pet.nome} (Detalhes TODO)')),
-        );
+        // Navega para a tela de detalhes do pet
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetalhesPetPage(pet: pet),
+          ),
+        ).then((result) {
+          // Se houver alteração na tela de detalhes (result == true), recarrega os pets
+          if (result == true && mounted) {
+            _fetchUserPets();
+          }
+        });
       },
     );
   }
