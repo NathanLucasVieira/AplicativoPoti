@@ -1,5 +1,5 @@
 // lib/widgets/side_bar_menu.dart
-import 'dart:async'; // IMPORTANTE: Para StreamSubscription
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,8 +10,9 @@ import 'package:projetoflutter/paginas/historico_alimentacao_page.dart';
 import 'package:projetoflutter/paginas/login.dart';
 import 'package:projetoflutter/paginas/cadastrar_rotina_page.dart';
 import 'package:projetoflutter/widgets/pet_card.dart';
-import 'package:projetoflutter/paginas/detalhes_pet_page.dart'; // For individual pet details
+import 'package:projetoflutter/paginas/detalhes_pet_page.dart';
 import 'package:projetoflutter/paginas/perfil_page.dart'; // Import the User Profile page
+import 'package:projetoflutter/paginas/configuracoes_page.dart'; // Import the Settings page
 
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
@@ -27,8 +28,8 @@ class _SideMenuState extends State<SideMenu> {
   List<Pet> _userPets = [];
   bool _isLoadingPets = false;
   User? _currentUser;
-  String _userDisplayName = "Usuário"; // Added to store display name
-  String _userDisplayEmail = "Não autenticado"; // Added to store display email
+  String _userDisplayName = "Usuário";
+  String _userDisplayEmail = "Não autenticado";
   bool _isPetListExpanded = true;
   StreamSubscription<User?>? _authStateChangesSubscription;
 
@@ -43,7 +44,7 @@ class _SideMenuState extends State<SideMenu> {
           _currentUser = user;
         });
         if (user != null) {
-          _fetchUserDetails(); // Fetch user details when auth state changes
+          _fetchUserDetails();
           _fetchUserPets();
         } else {
           setState(() {
@@ -57,48 +58,41 @@ class _SideMenuState extends State<SideMenu> {
     });
 
     if (_currentUser != null) {
-      _fetchUserDetails(); // Initial fetch
+      _fetchUserDetails();
       _fetchUserPets();
     }
   }
 
   Future<void> _fetchUserDetails() async {
     if (_currentUser == null || !mounted) return;
-
-    // Try to get name from Firestore 'usuarios' collection first
     try {
       DocumentSnapshot userDoc = await _firestore.collection('usuarios').doc(_currentUser!.uid).get();
-      if (userDoc.exists && userDoc.data() != null) {
-        final data = userDoc.data() as Map<String, dynamic>;
-        if (mounted) {
+      if (mounted) {
+        if (userDoc.exists && userDoc.data() != null) {
+          final data = userDoc.data() as Map<String, dynamic>;
           setState(() {
             _userDisplayName = data['nome'] ?? _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
           });
-        }
-      } else {
-        if (mounted) {
+        } else {
           setState(() {
             _userDisplayName = _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
           });
         }
+        setState(() {
+          _userDisplayEmail = _currentUser!.email ?? 'Não autenticado';
+        });
       }
     } catch (e) {
       // ignore: avoid_print
-      print("Error fetching user name from Firestore: $e");
+      print("Error fetching user details from Firestore (SideMenu): $e");
       if (mounted) {
-        setState(() { // Fallback to auth display name or email part
+        setState(() {
           _userDisplayName = _currentUser!.displayName ?? _currentUser!.email?.split('@')[0] ?? 'Usuário';
+          _userDisplayEmail = _currentUser!.email ?? 'Não autenticado';
         });
       }
     }
-    // Set email (always available from _currentUser if user is logged in)
-    if (mounted) {
-      setState(() {
-        _userDisplayEmail = _currentUser!.email ?? 'Não autenticado';
-      });
-    }
   }
-
 
   @override
   void dispose() {
@@ -108,50 +102,26 @@ class _SideMenuState extends State<SideMenu> {
 
   Future<void> _fetchUserPets() async {
     if (_currentUser == null || !mounted) {
-      if (mounted) {
-        setState(() {
-          _isLoadingPets = false;
-          _userPets = [];
-        });
-      }
+      if (mounted) setState(() => _isLoadingPets = false);
       return;
     }
-
-    if (mounted) {
-      setState(() {
-        _isLoadingPets = true;
-      });
-    }
-
+    if (mounted) setState(() => _isLoadingPets = true);
     try {
       QuerySnapshot petSnapshot = await _firestore
           .collection('pets')
           .where('tutorId', isEqualTo: _currentUser!.uid)
           .get();
-
-      List<Pet> pets = petSnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>?;
-        if (data == null) {
-          // ignore: avoid_print
-          print("Alerta: Documento de pet com dados nulos encontrado: ${doc.id}");
-          return null;
-        }
-        return Pet.fromMap(data, doc.id);
-      }).whereType<Pet>().toList();
-
       if (mounted) {
-        setState(() {
-          _userPets = pets;
-          _isLoadingPets = false;
-        });
+        _userPets = petSnapshot.docs.map((doc) {
+          return Pet.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        }).toList();
+        setState(() => _isLoadingPets = false);
       }
     } catch (e) {
       // ignore: avoid_print
       print("Erro ao buscar pets para o SideMenu: $e");
       if (mounted) {
-        setState(() {
-          _isLoadingPets = false;
-        });
+        setState(() => _isLoadingPets = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao carregar seus pets: ${e.toString()}')),
         );
@@ -161,24 +131,11 @@ class _SideMenuState extends State<SideMenu> {
 
   Widget _buildMenuItem(BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: Colors.grey.shade700,
-        size: 24,
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          color: Colors.black87,
-        ),
-      ),
+      leading: Icon(icon, color: Colors.grey.shade700, size: 24),
+      title: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.black87)),
       onTap: () {
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context); // Close the drawer
-        }
-        onTap(); // Then execute the onTap action (navigation)
+        if (Navigator.canPop(context)) Navigator.pop(context);
+        onTap();
       },
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
@@ -191,30 +148,20 @@ class _SideMenuState extends State<SideMenu> {
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       child: TextButton.icon(
         onPressed: () {
-          if (Navigator.canPop(context)) {
-            Navigator.pop(context);
-          }
+          if (Navigator.canPop(context)) Navigator.pop(context);
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const CadastroPetsPage()),
           ).then((_) {
-            if (_currentUser != null) {
-              _fetchUserPets();
-            }
+            if (_currentUser != null) _fetchUserPets();
           });
         },
         icon: Container(
           padding: const EdgeInsets.all(10),
-          decoration: const BoxDecoration(
-            color: Color(0xFFF9A825),
-            shape: BoxShape.circle,
-          ),
+          decoration: const BoxDecoration(color: Color(0xFFF9A825), shape: BoxShape.circle),
           child: const Icon(Icons.add, color: Colors.white, size: 20),
         ),
-        label: const Text(
-          'Adicionar Novo Pet',
-          style: TextStyle(color: Color(0xFFF9A825), fontSize: 15, fontWeight: FontWeight.w600),
-        ),
+        label: const Text('Adicionar Novo Pet', style: TextStyle(color: Color(0xFFF9A825), fontSize: 15, fontWeight: FontWeight.w600)),
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           alignment: Alignment.centerLeft,
@@ -233,18 +180,12 @@ class _SideMenuState extends State<SideMenu> {
       contentPadding: const EdgeInsets.only(left: 28.0, right: 16.0),
       visualDensity: VisualDensity.compact,
       onTap: () {
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context);
-        }
+        if (Navigator.canPop(context)) Navigator.pop(context);
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => DetalhesPetPage(pet: pet),
-          ),
+          MaterialPageRoute(builder: (context) => DetalhesPetPage(pet: pet)),
         ).then((result) {
-          if (result == true && mounted) {
-            _fetchUserPets();
-          }
+          if (result == true && mounted) _fetchUserPets();
         });
       },
     );
@@ -269,52 +210,26 @@ class _SideMenuState extends State<SideMenu> {
                     children: [
                       Image.asset('imagens/logo_sem_fundo.png', height: 45),
                       const SizedBox(width: 12),
-                      const Text(
-                        'P.O.T.I',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFD4842C),
-                        ),
-                      ),
+                      const Text('P.O.T.I', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFFD4842C))),
                     ],
                   ),
                 ),
                 InkWell(
-                  onTap: () {
-                    if (mounted){
-                      setState(() {
-                        _isPetListExpanded = !_isPetListExpanded;
-                      });
-                    }
-                  },
+                  onTap: () => setState(() => _isPetListExpanded = !_isPetListExpanded),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20.0, 20.0, 16.0, 8.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                            'Seus Pets Cadastrados',
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 14, fontWeight: FontWeight.w500)
-                        ),
-                        Icon(
-                          _isPetListExpanded ? Icons.expand_less : Icons.expand_more,
-                          color: Colors.grey.shade600,
-                          size: 20,
-                        ),
+                        Text('Seus Pets Cadastrados', style: TextStyle(color: Colors.grey.shade600, fontSize: 14, fontWeight: FontWeight.w500)),
+                        Icon(_isPetListExpanded ? Icons.expand_less : Icons.expand_more, color: Colors.grey.shade600, size: 20),
                       ],
                     ),
                   ),
                 ),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return SizeTransition(
-                      sizeFactor: animation,
-                      axisAlignment: -1.0,
-                      child: child,
-                    );
-                  },
+                  transitionBuilder: (child, animation) => SizeTransition(sizeFactor: animation, axisAlignment: -1.0, child: child),
                   child: _isPetListExpanded
                       ? Column(
                     key: const ValueKey<String>('petListExpanded'),
@@ -322,29 +237,21 @@ class _SideMenuState extends State<SideMenu> {
                       if (_currentUser == null)
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                          child: Text(
-                            'Faça login para ver seus pets.',
-                            style: TextStyle(color: Colors.orangeAccent, fontSize: 13, fontStyle: FontStyle.italic),
-                            textAlign: TextAlign.center,
-                          ),
+                          child: Text('Faça login para ver seus pets.', style: TextStyle(color: Colors.orangeAccent, fontSize: 13, fontStyle: FontStyle.italic), textAlign: TextAlign.center),
                         )
                       else if (_isLoadingPets)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 20.0),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFFF9A825), strokeWidth: 2.0,)),
+                          child: Center(child: CircularProgressIndicator(color: Color(0xFFF9A825), strokeWidth: 2.0)),
                         )
                       else if (_userPets.isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                            child: Text(
-                              'Nenhum pet cadastrado.',
-                              style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontStyle: FontStyle.italic),
-                            ),
+                            child: Text('Nenhum pet cadastrado.', style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontStyle: FontStyle.italic)),
                           )
                         else
                           ..._userPets.map((pet) => _buildPetListItem(context, pet)).toList(),
-                      if (_currentUser != null)
-                        _buildAddButton(context),
+                      if (_currentUser != null) _buildAddButton(context),
                     ],
                   )
                       : const SizedBox.shrink(key: ValueKey<String>('petListCollapsed')),
@@ -354,45 +261,26 @@ class _SideMenuState extends State<SideMenu> {
                   child: Divider(height: 1, thickness: 1),
                 ),
                 _buildMenuItem(context, Icons.home_outlined, 'Início', () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PaginaInicialRefatorada()),
-                        (Route<dynamic> route) => false,
-                  );
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const PaginaInicialRefatorada()), (Route<dynamic> route) => false);
                 }),
                 _buildMenuItem(context, Icons.restaurant_menu_outlined, 'Alimentar Agora', () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const AlimentarManualPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AlimentarManualPage()));
                 }),
                 _buildMenuItem(context, Icons.calendar_today_outlined, 'Criar Plano de Alimentação', () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CadastrarRotinaPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CadastrarRotinaPage()));
                 }),
                 _buildMenuItem(context, Icons.history_outlined, 'Histórico de Alimentação', () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HistoricoAlimentacaoPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const HistoricoAlimentacaoPage()));
                 }),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                   child: Divider(height: 1, thickness: 1),
                 ),
                 _buildMenuItem(context, Icons.person_outline, 'Meu Perfil', () {
-                  // Updated to navigate to PerfilPage
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PerfilPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PerfilPage())); // Corrected
                 }),
                 _buildMenuItem(context, Icons.settings_outlined, 'Configurações', () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Navegar para Configurações (TODO)')),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ConfiguracoesPage())); // Corrected
                 }),
               ],
             ),
@@ -411,9 +299,8 @@ class _SideMenuState extends State<SideMenu> {
                     CircleAvatar(
                       backgroundColor: const Color(0xFFF9A825).withOpacity(0.8),
                       child: Text(
-                        // Use _userDisplayName for the avatar initial
-                          _userDisplayName.isNotEmpty ? _userDisplayName[0].toUpperCase() : 'U',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+                        _userDisplayName.isNotEmpty ? _userDisplayName[0].toUpperCase() : 'U',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -421,16 +308,8 @@ class _SideMenuState extends State<SideMenu> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _userDisplayName, // Use _userDisplayName
-                            style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            _userDisplayEmail, // Use _userDisplayEmail
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.grey.shade700),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          Text(_userDisplayName, style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                          Text(_userDisplayEmail, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.grey.shade700), overflow: TextOverflow.ellipsis),
                         ],
                       ),
                     ),
@@ -438,17 +317,8 @@ class _SideMenuState extends State<SideMenu> {
                       icon: Icon(Icons.exit_to_app_outlined, color: Colors.grey.shade600),
                       onPressed: () async {
                         await _auth.signOut();
-                        // Ensure context is still valid before navigating
-                        if (mounted && Navigator.canPop(context)) {
-                          Navigator.pop(context); // Close drawer if open
-                        }
-                        if (mounted) {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (context) => const Login()),
-                                (Route<dynamic> route) => false,
-                          );
-                        }
+                        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+                        if (mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const Login()), (Route<dynamic> route) => false);
                       },
                       tooltip: 'Sair',
                       iconSize: 22,
@@ -463,20 +333,14 @@ class _SideMenuState extends State<SideMenu> {
               child: TextButton.icon(
                 icon: const Icon(Icons.login, color: Color(0xFFF9A825)),
                 label: const Text('Fazer Login', style: TextStyle(color: Color(0xFFF9A825), fontWeight: FontWeight.bold)),
-                onPressed: (){
-                  if (Navigator.canPop(context)) {
-                    Navigator.pop(context);
-                  }
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Login()),
-                        (Route<dynamic> route) => false,
-                  );
+                onPressed: () {
+                  if (Navigator.canPop(context)) Navigator.pop(context);
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const Login()), (Route<dynamic> route) => false);
                 },
                 style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFFF9A825).withOpacity(0.1),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 12)
+                  backgroundColor: const Color(0xFFF9A825).withOpacity(0.1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
