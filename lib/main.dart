@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'home.dart'; // Contém CadastroPage
+import 'home.dart';
 import 'firebase_options.dart';
-// Importe o pacote de localizações do Flutter
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
@@ -14,7 +13,6 @@ void main() async {
   );
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -22,15 +20,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: CadastroPage(), // Sua tela inicial
+      home: CadastroPage(),
 
-      // Configurações de Localização:
-      locale: const Locale('pt', 'BR'),
-      supportedLocales: const [
-        Locale('pt', 'BR'),
-        Locale('en', 'US'),
-
-      ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
