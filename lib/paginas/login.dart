@@ -69,16 +69,17 @@ class _LoginPageState extends State<Login> {
             child: Container(
               width: double.infinity,
               constraints: const BoxConstraints(maxWidth: 1200),
-              margin: const EdgeInsets.only(bottom: 200), // Ajuste para centralizar melhor o formulário
+              // Removed large bottom margin for mobile
+              margin: isMobile ? EdgeInsets.zero : const EdgeInsets.only(bottom: 200),
               child: isMobile
-                  ? _buildVerticalLayout()
+                  ? _buildVerticalLayout(context)
                   : Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround, // Ajustado para melhor espaçamento
-                crossAxisAlignment: CrossAxisAlignment.center, // Centraliza verticalmente
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(flex: 4, child: _buildLogoSection()),
                   const SizedBox(width: 20),
-                  Expanded(flex: 5, child: _buildFormSection()),
+                  Expanded(flex: 5, child: _buildFormSection(isMobile: false)),
                 ],
               ),
             ),
@@ -88,27 +89,31 @@ class _LoginPageState extends State<Login> {
     );
   }
 
-  Widget _buildVerticalLayout() {
-    return SingleChildScrollView( // Adicionado para evitar overflow em telas menores
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+  Widget _buildVerticalLayout(BuildContext context) {
+    // Added SingleChildScrollView for mobile
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Espaçamento superior
-          _buildLogoSection(),
+          // Consider adding SizedBox(height: MediaQuery.of(context).size.height * 0.05) if needed
+          _buildLogoSection(isMobile: true),
           const SizedBox(height: 30),
-          _buildFormSection(),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Espaçamento inferior
+          _buildFormSection(isMobile: true),
+          // Consider adding SizedBox(height: MediaQuery.of(context).size.height * 0.05) if needed
         ],
       ),
     );
   }
 
-  Widget _buildLogoSection() {
+  Widget _buildLogoSection({bool isMobile = false}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Image.asset('imagens/logo_sem_fundo.png', width: 200), // Ajuste no tamanho da imagem
+        Image.asset(
+          'imagens/logo_sem_fundo.png',
+          width: isMobile ? 180 : 200, // Adjusted size for mobile
+        ),
         const SizedBox(height: 16),
         const Text(
           'P.O.T.I',
@@ -122,17 +127,17 @@ class _LoginPageState extends State<Login> {
     );
   }
 
-  Widget _buildFormSection() {
+  Widget _buildFormSection({bool isMobile = false}) {
     return Container(
-      padding: const EdgeInsets.all(30),
+      padding: EdgeInsets.all(isMobile ? 20 : 30), // Adjusted padding for mobile
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
-            blurRadius: 10, // Aumentado o blur para suavizar a sombra
-            offset: Offset(0, 5), // Ajustado o offset da sombra
+            blurRadius: 10,
+            offset: Offset(0, 5),
           ),
         ],
       ),
@@ -143,23 +148,25 @@ class _LoginPageState extends State<Login> {
             'Bem-vindo ao P.O.T.I',
             style: TextStyle(
               color: Color(0xFFD4842C),
-              fontSize: 28, // Ajustado tamanho da fonte
-              fontFamily: 'RobotoSlab', // Certifique-se que esta fonte está no pubspec.yaml se for customizada
+              fontSize: 26, // Adjusted
+              fontFamily: 'RobotoSlab',
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           const Text(
             'Entre com sua Conta!',
             style: TextStyle(
               color: Color(0xFFD4842C),
-              fontSize: 18, // Ajustado tamanho da fonte
+              fontSize: 18, // Adjusted
               fontFamily: 'RobotoSlab',
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 25),
           _buildTextField(
               'Email', _emailController, TextInputType.emailAddress),
-          _buildPasswordField(), // Este já tem um Padding
+          _buildPasswordField(),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
@@ -167,8 +174,8 @@ class _LoginPageState extends State<Login> {
               onPressed: _logarUsuario,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD4842C),
-                padding: const EdgeInsets.symmetric(vertical: 15), // Aumentado o padding vertical
-                shape: RoundedRectangleBorder( // Adicionado para bordas arredondadas
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -182,14 +189,14 @@ class _LoginPageState extends State<Login> {
           Text.rich(
             TextSpan(
               text: 'Não tem uma conta? ',
-              style: const TextStyle(color: Colors.black54), // Cor ajustada para melhor leitura
+              style: const TextStyle(color: Colors.black54),
               children: [
                 TextSpan(
                     text: 'FAZER CADASTRO',
                     style: const TextStyle(
                       color: Color(0xFFD4842C),
                       fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline, // Adicionado sublinhado para indicar clicabilidade
+                      decoration: TextDecoration.underline,
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
@@ -201,7 +208,7 @@ class _LoginPageState extends State<Login> {
                       }),
               ],
             ),
-            textAlign: TextAlign.center, // Centralizado o texto
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -212,19 +219,19 @@ class _LoginPageState extends State<Login> {
       String label, TextEditingController controller, TextInputType type) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
-      child: TextField( // Simplificado para usar labelText
+      child: TextField(
         controller: controller,
         keyboardType: type,
         decoration: InputDecoration(
-          labelText: label, // Usando labelText
+          labelText: label,
           contentPadding:
-          const EdgeInsets.symmetric(horizontal: 15, vertical: 12), // Ajustado padding
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)), // Bordas arredondadas
-          focusedBorder: OutlineInputBorder( // Borda quando focado
+          const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          focusedBorder: OutlineInputBorder(
             borderSide: const BorderSide(color: Color(0xFFD4842C), width: 2.0),
             borderRadius: BorderRadius.circular(8),
           ),
-          floatingLabelStyle: const TextStyle(color: Color(0xFFD4842C)), // Cor do label quando flutuando
+          floatingLabelStyle: const TextStyle(color: Color(0xFFD4842C)),
         ),
       ),
     );
@@ -237,7 +244,7 @@ class _LoginPageState extends State<Login> {
         controller: _senhaController,
         obscureText: !_mostrarSenha,
         decoration: InputDecoration(
-          labelText: 'Senha', // Usando labelText
+          labelText: 'Senha',
           contentPadding:
           const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
           border: OutlineInputBorder(
@@ -248,7 +255,7 @@ class _LoginPageState extends State<Login> {
             borderRadius: BorderRadius.circular(8),
           ),
           floatingLabelStyle: const TextStyle(color: Color(0xFFD4842C)),
-          suffixIcon: IconButton( // Ícone para mostrar/ocultar senha
+          suffixIcon: IconButton(
             icon: Icon(
               _mostrarSenha ? Icons.visibility_off : Icons.visibility,
               color: Colors.grey,

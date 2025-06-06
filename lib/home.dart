@@ -82,15 +82,17 @@ class _CadastroPageState extends State<CadastroPage> {
             child: Container(
               width: double.infinity,
               constraints: const BoxConstraints(maxWidth: 1200),
-              margin: const EdgeInsets.only(bottom: 200),
+              // Removed large bottom margin for mobile, relying on SingleChildScrollView and Center
+              margin: isMobile ? EdgeInsets.zero : const EdgeInsets.only(bottom: 200),
               child: isMobile
-                  ? _buildVerticalLayout()
+                  ? _buildVerticalLayout(context)
                   : Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(flex: 4, child: _buildLogoSection()),
                   const SizedBox(width: 20),
-                  Expanded(flex: 5, child: _buildFormSection()),
+                  Expanded(flex: 5, child: _buildFormSection(isMobile: false)),
                 ],
               ),
             ),
@@ -100,22 +102,28 @@ class _CadastroPageState extends State<CadastroPage> {
     );
   }
 
-  Widget _buildVerticalLayout() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildLogoSection(),
-        const SizedBox(height: 20),
-        _buildFormSection(),
-      ],
+  Widget _buildVerticalLayout(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0), // Added vertical padding
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildLogoSection(isMobile: true),
+          const SizedBox(height: 30), // Increased spacing
+          _buildFormSection(isMobile: true),
+        ],
+      ),
     );
   }
 
-  Widget _buildLogoSection() {
+  Widget _buildLogoSection({bool isMobile = false}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Image.asset('imagens/logo_sem_fundo.png', width: 250),
+        Image.asset(
+          'imagens/logo_sem_fundo.png',
+          width: isMobile ? 180 : 250, // Smaller logo for mobile
+        ),
         const SizedBox(height: 16),
         const Text(
           'P.O.T.I',
@@ -129,9 +137,9 @@ class _CadastroPageState extends State<CadastroPage> {
     );
   }
 
-  Widget _buildFormSection() {
+  Widget _buildFormSection({bool isMobile = false}) {
     return Container(
-      padding: const EdgeInsets.all(30),
+      padding: EdgeInsets.all(isMobile ? 20 : 30), // Reduced padding for mobile
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -150,18 +158,20 @@ class _CadastroPageState extends State<CadastroPage> {
             'Bem-vindo ao P.O.T.I',
             style: TextStyle(
               color: Color(0xFFD4842C),
-              fontSize: 30,
+              fontSize: 26, // Slightly adjusted
               fontFamily: 'RobotoSlab',
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
           const Text(
             'Crie sua Conta!',
             style: TextStyle(
               color: Color(0xFFD4842C),
-              fontSize: 20,
+              fontSize: 18, // Slightly adjusted
               fontFamily: 'RobotoSlab',
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
           _buildTextField('Nome', _nomeController, TextInputType.text),
@@ -175,6 +185,9 @@ class _CadastroPageState extends State<CadastroPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD4842C),
                 padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text(
                 'Cadastrar',
@@ -182,16 +195,18 @@ class _CadastroPageState extends State<CadastroPage> {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 15), // Increased spacing
           Text.rich(
             TextSpan(
               text: 'Já tem uma conta? ',
+              style: const TextStyle(color: Colors.black54),
               children: [
                 TextSpan(
                   text: 'FAZER LOGIN',
                   style: const TextStyle(
                     color: Color(0xFFD4842C),
                     fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
@@ -203,6 +218,7 @@ class _CadastroPageState extends State<CadastroPage> {
                 ),
               ],
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -212,20 +228,19 @@ class _CadastroPageState extends State<CadastroPage> {
   Widget _buildTextField(String label, TextEditingController controller, TextInputType type) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 5),
-          TextField(
-            controller: controller,
-            keyboardType: type,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
-            ),
+      child: TextField(
+        controller: controller,
+        keyboardType: type,
+        decoration: InputDecoration(
+          labelText: label,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: Color(0xFFD4842C), width: 2.0),
+            borderRadius: BorderRadius.circular(8),
           ),
-        ],
+          floatingLabelStyle: const TextStyle(color: Color(0xFFD4842C)),
+        ),
       ),
     );
   }
@@ -233,48 +248,32 @@ class _CadastroPageState extends State<CadastroPage> {
   Widget _buildPasswordField() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _senhaController,
-              obscureText: !_mostrarSenha,
-              decoration: const InputDecoration(
-                hintText: 'Senha',
-                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(5),
-                    bottomLeft: Radius.circular(5),
-                  ),
-                ),
-              ),
-            ),
+      child: TextField(
+        controller: _senhaController,
+        obscureText: !_mostrarSenha,
+        decoration: InputDecoration(
+          labelText: 'Senha',
+          contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
           ),
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Color(0xFFCCCCCC)),
-                bottom: BorderSide(color: Color(0xFFCCCCCC)),
-                right: BorderSide(color: Color(0xFFCCCCCC)),
-              ),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(5),
-                bottomRight: Radius.circular(5),
-              ),
-            ),
-            child: IconButton(
-              icon: Icon(
-                _mostrarSenha ? Icons.visibility_off : Icons.visibility,
-              ),
-              onPressed: () {
-                setState(() {
-                  _mostrarSenha = !_mostrarSenha;
-                });
-              },
-            ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: Color(0xFFD4842C), width: 2.0),
+            borderRadius: BorderRadius.circular(8),
           ),
-        ],
+          floatingLabelStyle: const TextStyle(color: Color(0xFFD4842C)),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _mostrarSenha ? Icons.visibility_off : Icons.visibility,
+              color: Colors.grey,
+            ),
+            onPressed: () {
+              setState(() {
+                _mostrarSenha = !_mostrarSenha;
+              });
+            },
+          ),
+        ),
       ),
     );
   }

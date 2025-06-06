@@ -92,7 +92,7 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
                 content: Text('Alimentado com ${quantidade % 1 == 0 ? quantidade.toInt() : quantidade.toStringAsFixed(1)}g. Registro salvo.'),
                 backgroundColor: Colors.green),
           );
-          _quantidadeController.clear();
+          _quantidadeController.text = "0"; // Clear and set to 0
           _updateQuantidadeDisplay(); // Atualiza o display para "0g"
         }
       } catch (e) {
@@ -160,19 +160,18 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
             child: Card(
               elevation: 4.0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0), // Bordas arredondadas
+                borderRadius: BorderRadius.circular(15.0),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(20.0), // Adjusted padding
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Image.asset(
-                      'imagens/logo_sem_fundo.png', // Certifique-se que a imagem existe
-                      height: 120,
+                      'imagens/logo_sem_fundo.png',
+                      height: 100, // Reduced height
                       errorBuilder: (context, error, stackTrace) {
-                        // Fallback em caso de erro ao carregar a imagem
-                        return const Icon(Icons.pets, size: 120, color: Colors.grey);
+                        return const Icon(Icons.pets, size: 100, color: Colors.grey);
                       },
                     ),
                     const SizedBox(height: 20),
@@ -187,9 +186,9 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
                     Text(
                       _quantidadeSelecionadaDisplay,
                       style: const TextStyle(
-                        fontSize: 36,
+                        fontSize: 34, // Slightly reduced
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFF9A825), // Cor destaque Poti
+                        color: Color(0xFFF9A825),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -212,44 +211,46 @@ class _AlimentarManualPageState extends State<AlimentarManualPage> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 18),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 24), // Adjusted
                     _isLoading
                         ? const CircularProgressIndicator(color: Color(0xFFF9A825))
                         : ElevatedButton(
                       onPressed: _alimentarAgora,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF9A825),
-                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14), // Adjusted padding
+                        textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold), // Adjusted
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
                         ),
-                        minimumSize: const Size(double.infinity, 50), // Botão com largura total
+                        minimumSize: const Size(double.infinity, 48), // Adjusted height
                       ),
                       child: const Text("Alimentar", style: TextStyle(color: Colors.white)),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 12), // Adjusted
                     TextButton.icon(
                       icon: const Icon(Icons.calendar_today_outlined, color: Color(0xFFF9A825)),
                       label: const Text(
                         "Criar Plano De Alimentação",
-                        style: TextStyle(color: Color(0xFFF9A825), fontSize: 16),
+                        style: TextStyle(color: Color(0xFFF9A825), fontSize: 15), // Adjusted
                       ),
                       onPressed: _navegarParaCriarPlano,
                       style: TextButton.styleFrom(
                         minimumSize: const Size(double.infinity, 40),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8), // Adjusted
                     TextButton.icon(
                       icon: const Icon(Icons.history, color: Color(0xFFF9A825)),
                       label: const Text(
                         "Ver Histórico de Alimentação",
-                        style: TextStyle(color: Color(0xFFF9A825), fontSize: 16),
+                        style: TextStyle(color: Color(0xFFF9A825), fontSize: 15), // Adjusted
                       ),
                       onPressed: _navegarParaHistorico,
                       style: TextButton.styleFrom(
                         minimumSize: const Size(double.infinity, 40),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                     ),
                   ],

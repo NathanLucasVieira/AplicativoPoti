@@ -40,7 +40,7 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
               timePickerTheme: TimePickerThemeData(
                 dialHandColor: const Color(0xFFF9A825),
                 hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
-                states.contains(MaterialState.selected) ? Colors.white : Colors.black), // Corrigido
+                states.contains(MaterialState.selected) ? Colors.white : Colors.black),
                 hourMinuteColor: MaterialStateColor.resolveWith((states) =>
                 states.contains(MaterialState.selected) ? const Color(0xFFF9A825) : Colors.grey.shade300),
                 dayPeriodTextColor: MaterialStateColor.resolveWith((states) =>
@@ -71,7 +71,7 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
     final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: _selectedDate ?? DateTime.now(),
-        firstDate: DateTime.now().subtract(const Duration(days: 1)),
+        firstDate: DateTime.now().subtract(const Duration(days: 1)), // Allow today
         lastDate: DateTime(2101),
         locale: const Locale('pt', 'BR'),
         builder: (context, child) {
@@ -140,9 +140,9 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
         'nomePlano': _nomePlanoController.text.trim(),
         'dataHora': Timestamp.fromDate(combinedDateTime),
         'quantidade': double.tryParse(_quantidadeController.text.trim()) ?? 0.0,
-        'tipo': 'Plano - ${_nomePlanoController.text.trim()}',
-        'concluido': false,
-        'petNome': '',
+        'tipo': 'Plano - ${_nomePlanoController.text.trim()}', // More descriptive
+        'concluido': false, // Default for a new plan
+        'petNome': '', // Consider adding pet selection if multiple pets
         'criadoEm': Timestamp.now(),
       });
 
@@ -155,6 +155,7 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
         _selectedDate = null;
         _selectedTime = null;
       });
+      _formKey.currentState?.reset(); // Reset form state
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao cadastrar rotina: ${e.toString()}'), backgroundColor: Colors.red),
@@ -171,7 +172,7 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
   @override
   Widget build(BuildContext context) {
     const Color laranjaPrincipal = Color(0xFFF9A825);
-    const Color laranjaClarinho = Color(0xFFEEEEEE);
+    // const Color laranjaClarinho = Color(0xFFEEEEEE); // Using white for card background for better contrast
 
     return Scaffold(
       key: _scaffoldKey,
@@ -183,7 +184,7 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
       backgroundColor: const Color(0xFFFAFAFA),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(16.0), // Adjusted padding
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
             child: Card(
@@ -191,9 +192,9 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
               ),
-              color: laranjaClarinho,
+              color: Colors.white, // Changed to white
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(20.0), // Adjusted padding
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -204,16 +205,16 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                         "Detalhes da Rotina",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 22,
+                          fontSize: 20, // Adjusted
                           fontWeight: FontWeight.bold,
                           color: Colors.brown.shade700,
                         ),
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 20), // Adjusted
                       TextFormField(
                         controller: _nomePlanoController,
                         decoration: InputDecoration(
-                          labelText: 'Nome do Plano (Ex: Viagem, Manhã)',
+                          labelText: 'Nome do Plano (Ex: Viagem)',
                           labelStyle: TextStyle(color: Colors.brown.shade400),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                           prefixIcon: Icon(Icons.label_outline, color: laranjaPrincipal),
@@ -230,10 +231,10 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16), // Adjusted
                       Row(
                         children: [
-                          Expanded(
+                          Flexible( // Changed to Flexible from Expanded
                             child: InkWell(
                               onTap: () => _selectDate(context),
                               child: InputDecorator(
@@ -241,27 +242,29 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                                   labelText: 'Data',
                                   labelStyle: TextStyle(color: Colors.brown.shade400),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-                                  prefixIcon: Icon(Icons.calendar_today, color: laranjaPrincipal),
+                                  prefixIcon: Icon(Icons.calendar_today, color: laranjaPrincipal, size: 20), // Smaller icon
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(color: laranjaPrincipal, width: 2.0),
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
                                   floatingLabelStyle: const TextStyle(color: laranjaPrincipal),
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10), // Adjusted padding
                                 ),
                                 child: Text(
                                   _selectedDate == null
-                                      ? 'Selecione a Data'
-                                      : DateFormat('dd/MM/yyyy', 'pt_BR').format(_selectedDate!),
+                                      ? 'Selecione' // Simplified text
+                                      : DateFormat('dd/MM/yy', 'pt_BR').format(_selectedDate!), // Shorter date format
                                   style: TextStyle(
                                     color: _selectedDate == null ? Colors.grey.shade700 : Colors.black87,
-                                    fontSize: 16,
+                                    fontSize: 15, // Adjusted font size
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
+                          const SizedBox(width: 8), // Reduced spacing
+                          Flexible( // Changed to Flexible
                             child: InkWell(
                               onTap: () => _selectTime(context),
                               child: InputDecorator(
@@ -269,35 +272,37 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                                   labelText: 'Horário',
                                   labelStyle: TextStyle(color: Colors.brown.shade400),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-                                  prefixIcon: Icon(Icons.access_time, color: laranjaPrincipal),
+                                  prefixIcon: Icon(Icons.access_time, color: laranjaPrincipal, size: 20), // Smaller icon
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(color: laranjaPrincipal, width: 2.0),
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
                                   floatingLabelStyle: const TextStyle(color: laranjaPrincipal),
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10), // Adjusted padding
                                 ),
                                 child: Text(
                                   _selectedTime == null
-                                      ? 'Selecione o Horário'
+                                      ? 'Selecione' // Simplified text
                                       : _selectedTime!.format(context),
                                   style: TextStyle(
                                     color: _selectedTime == null ? Colors.grey.shade700 : Colors.black87,
-                                    fontSize: 16,
+                                    fontSize: 15, // Adjusted font size
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16), // Adjusted
                       TextFormField(
                         controller: _quantidadeController,
                         decoration: InputDecoration(
                           labelText: 'Quantidade (gramas)',
                           labelStyle: TextStyle(color: Colors.brown.shade400),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-                          prefixIcon: Icon(Icons.restaurant_menu, color: laranjaPrincipal),
+                          prefixIcon: Icon(Icons.restaurant_menu, color: laranjaPrincipal, size: 20), // Smaller icon
                           suffixText: 'g',
                           focusedBorder: OutlineInputBorder(
                             borderSide: const BorderSide(color: laranjaPrincipal, width: 2.0),
@@ -316,41 +321,41 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 20), // Adjusted
                       Center(
                         child: Image.asset(
-                          'imagens/food_bow.png',
-                          height: 100,
+                          'imagens/food_bowl.png',
+                          height: 80, // Reduced height
                           fit: BoxFit.contain,
                           color: laranjaPrincipal.withOpacity(0.8),
                           errorBuilder: (context, error, stackTrace) {
                             // ignore: avoid_print
                             print("Erro ao carregar imagem da tigela: $error");
-                            return Icon(Icons.pets, size: 100, color: Colors.grey.shade400);
+                            return Icon(Icons.pets, size: 80, color: Colors.grey.shade400);
                           },
                         ),
                       ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 24), // Adjusted
                       _isLoading
                           ? const Center(child: CircularProgressIndicator(color: laranjaPrincipal))
                           : ElevatedButton.icon(
-                        icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 22),
+                        icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 20), // Adjusted size
                         label: const Text(
                           'Adicionar Rotina',
-                          style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600), // Adjusted size
                         ),
                         onPressed: _cadastrarRotina,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: laranjaPrincipal,
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20), // Adjusted padding
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                           elevation: 3.0,
-                          minimumSize: const Size(double.infinity, 50),
+                          minimumSize: const Size(double.infinity, 48), // Adjusted height
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10), // Adjusted
                       TextButton(
                         onPressed: () {
                           if (_isLoading) return;
@@ -364,10 +369,10 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                         },
                         child: Text(
                           'Limpar Campos',
-                          style: TextStyle(color: Colors.brown.shade500, fontSize: 15),
+                          style: TextStyle(color: Colors.brown.shade500, fontSize: 14), // Adjusted size
                         ),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 8), // Adjusted padding
                         ),
                       ),
                     ],

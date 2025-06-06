@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:projetoflutter/widgets/app_bar_poti.dart';
 import 'package:projetoflutter/widgets/side_bar_menu.dart';
-import 'package:projetoflutter/widgets/pet_card.dart';
+import 'package:projetoflutter/widgets/pet_card.dart'; // Ensure Pet model is here
 
 class TelaDispositivoConectado extends StatefulWidget {
   const TelaDispositivoConectado({super.key});
@@ -26,11 +26,23 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.75, initialPage: 0);
+    // Initialize with a default value, even if it changes later
+    _pageController = PageController(viewportFraction: 0.8, initialPage: _currentPage);
     _fetchUserPets();
+
+    _pageController.addListener(() {
+      if (_pageController.page?.round() != _currentPage && _pageController.hasClients) {
+        if(mounted){
+          setState(() {
+            _currentPage = _pageController.page!.round();
+          });
+        }
+      }
+    });
   }
 
   Future<void> _fetchUserPets() async {
+    if (!mounted) return;
     setState(() {
       _isLoadingPets = true;
     });
@@ -46,37 +58,40 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
           return Pet.fromMap(doc.data() as Map<String, dynamic>, doc.id);
         }).toList();
 
+        if (!mounted) return;
         setState(() {
           _petsCadastrados = pets;
           _isLoadingPets = false;
-          _currentPage = _petsCadastrados.isNotEmpty ? 0 : 0;
-          if (_pageController.hasClients && _petsCadastrados.isNotEmpty) {
-            _pageController.jumpToPage(0);
-          } else if (_petsCadastrados.isEmpty){
+          // Update PageController initial page if pets list was empty and now has items
+          if (_petsCadastrados.isNotEmpty && _currentPage >= _petsCadastrados.length) {
             _currentPage = 0;
+          }
+          if (_pageController.hasClients && _petsCadastrados.isNotEmpty) {
+            // No need to jump if it's already at a valid page or list is empty.
+            // _pageController.jumpToPage(_currentPage); //This can cause issues if called too early or state changes rapidly
+          } else if (_petsCadastrados.isEmpty){
+            _currentPage = 0; // Or -1 if you want to signify no page.
           }
         });
       } catch (e) {
         // ignore: avoid_print
         print("Erro ao buscar pets: $e");
+        if (!mounted) return;
         setState(() {
           _isLoadingPets = false;
         });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erro ao carregar os pets: ${e.toString()}')),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar os pets: ${e.toString()}')),
+        );
       }
     } else {
+      if (!mounted) return;
       setState(() {
         _isLoadingPets = false;
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuário não autenticado.')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuário não autenticado.')),
+      );
     }
   }
 
@@ -88,12 +103,15 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
 
   Widget _buildPetCarousel() {
     if (_isLoadingPets) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFF9A825)));
+      return const Center(child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 50.0),
+        child: CircularProgressIndicator(color: Color(0xFFF9A825)),
+      ));
     }
     if (_petsCadastrados.isEmpty) {
       return const Center(
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 40.0),
+            padding: EdgeInsets.symmetric(vertical: 50.0),
             child: Text(
               'Nenhum pet cadastrado ainda.',
               style: TextStyle(fontSize: 16, color: Colors.grey),
@@ -101,80 +119,57 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
           ));
     }
 
-    const double carouselHeight = 170.0;
+    // Re-initialize PageController if it was disposed or if number of pages changed drastically
+    // This is a simplified check; more complex logic might be needed for dynamic page counts
+    if (!_pageController.hasClients || (_pageController.viewportFraction != 0.8 && _petsCadastrados.isNotEmpty) ) {
+      _pageController = PageController(viewportFraction: 0.8, initialPage: _currentPage);
+    }
+
+
+    const double carouselHeight = 160.0; // Slightly reduced height for cards
 
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            (_petsCadastrados.length > 1)
-                ? IconButton(
-              icon: Icon(Icons.arrow_back_ios, color: Colors.grey.shade600, size: 20),
-              onPressed: () {
-                _pageController.previousPage(
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutSine,
-                );
-              },
-            )
-                : const SizedBox(width: 48),
+        SizedBox( // Explicitly define SizedBox for PageView
+          height: carouselHeight,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: _petsCadastrados.length,
+            onPageChanged: (int page) {
+              if(mounted){
+                setState(() {
+                  _currentPage = page;
+                });
+              }
+            },
+            itemBuilder: (context, index) {
+              // Card scaling animation (optional, can be simplified if causing issues)
+              double scaleFactor = 0.85; // Non-selected scale
+              if (_pageController.position.haveDimensions) {
+                // Use _currentPage if page is not yet an integer (during scroll)
+                double page = _pageController.page ?? _currentPage.toDouble();
+                scaleFactor = (1 - ((index - page).abs() * 0.15)).clamp(0.85, 1.0);
+              } else if (index == _currentPage) {
+                scaleFactor = 1.0; // Selected scale
+              }
 
-            Expanded(
-              child: SizedBox(
-                height: carouselHeight,
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: _petsCadastrados.length,
-                  onPageChanged: (int page) {
-                    setState(() {
-                      _currentPage = page;
-                    });
-                  },
-                  itemBuilder: (context, index) {
-                    return AnimatedBuilder(
-                      animation: _pageController,
-                      builder: (BuildContext context, Widget? cardWidget) {
-                        double scaleFactor = 0.88;
-                        if (_pageController.position.haveDimensions) {
-                          double page = _pageController.page ?? _currentPage.toDouble();
-                          double diff = (index - page).abs();
-                          scaleFactor = (1 - (diff * 0.12)).clamp(0.88, 1.0);
-                        } else {
-                          scaleFactor = (index == _currentPage) ? 1.0 : 0.88;
-                        }
-                        return Transform.scale(
-                          scale: scaleFactor,
-                          child: cardWidget,
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: PetCard(
-                          pet: _petsCadastrados[index],
-                          isSelected: index == _currentPage,
-                        ),
-                      ),
-                    );
-                  },
+              return Transform.scale(
+                scale: scaleFactor,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0), // Adjust padding
+                  child: PetCard(
+                    pet: _petsCadastrados[index],
+                    isSelected: index == _currentPage,
+                  ),
                 ),
-              ),
-            ),
-            (_petsCadastrados.length > 1)
-                ? IconButton(
-              icon: Icon(Icons.arrow_forward_ios, color: Colors.grey.shade600, size: 20),
-              onPressed: () {
-                _pageController.nextPage(
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutSine,
-                );
-              },
-            )
-                : const SizedBox(width: 48),
-          ],
+              );
+            },
+          ),
         ),
-        const SizedBox(height: 12.0),
-        _buildPageIndicator(),
+        if (_petsCadastrados.length > 1) ...[ // Show indicator only if more than 1 pet
+          const SizedBox(height: 10.0),
+          _buildPageIndicator(),
+        ]
       ],
     );
   }
@@ -185,9 +180,10 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
     List<Widget> indicators = [];
     for (int i = 0; i < _petsCadastrados.length; i++) {
       indicators.add(
-        Container(
-          width: 8.0,
-          height: 8.0,
+        AnimatedContainer( // Added animation for indicator change
+          duration: const Duration(milliseconds: 150),
+          width: _currentPage == i ? 10.0 : 8.0, // Larger if selected
+          height: _currentPage == i ? 10.0 : 8.0,
           margin: const EdgeInsets.symmetric(horizontal: 4.0),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -206,37 +202,38 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
 
   Widget _buildAlimentadorStatusCard() {
     return Container(
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.all(16.0), // Reduced padding
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(15.0), // Slightly smaller radius
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 2,
-            blurRadius: 5,
+            spreadRadius: 1, // Reduced spread
+            blurRadius: 4,   // Reduced blur
           ),
         ],
       ),
       child: Column(
         children: [
-          const Icon(Icons.wifi, size: 40, color: Color(0xFFF9A825)),
-          const SizedBox(height: 10),
+          const Icon(Icons.wifi, size: 36, color: Color(0xFFF9A825)), // Slightly smaller icon
+          const SizedBox(height: 8),
           const Text(
-            "Alimentador1 conectado",
+            "Alimentador Conectado", // Generic name
             style: TextStyle(
-                fontSize: 18,
+                fontSize: 17, // Adjusted font size
                 fontWeight: FontWeight.bold,
                 color: Colors.green),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           Text(
-            "Conectado ao alimentador",
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+            "Status: Online", // Simplified status
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade700), // Adjusted font size
           ),
           Text(
-            "Via Wi-Fi SUCESSO - 2.4 GHz",
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            "Rede: Wi-Fi SUCESSO - 2.4 GHz", // Example network
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600), // Adjusted font size
           ),
         ],
       ),
@@ -244,18 +241,17 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
   }
 
   Widget _buildSocialMediaFooter() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0), // Reduced padding
+      child: Wrap( // Used Wrap for responsiveness
+        alignment: WrapAlignment.center,
+        spacing: 12.0, // Spacing between items
+        runSpacing: 8.0, // Spacing between lines
         children: [
-          Text('Siga nas Redes sociais'),
-          SizedBox(width: 10),
-          Icon(Icons.facebook),
-          SizedBox(width: 10),
-          Icon(Icons.camera_alt_outlined),
-          SizedBox(width: 10),
-          Icon(Icons.alternate_email),
+          Text('Siga-nos:', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)), // Adjusted
+          const Icon(Icons.facebook, size: 22),
+          const Icon(Icons.camera_alt_outlined, size: 22),
+          const Icon(Icons.alternate_email, size: 22), // Changed to a generic social icon
         ],
       ),
     );
@@ -271,89 +267,95 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
       ),
       drawer: const SideMenu(),
       backgroundColor: const Color(0xFFFAFAFA),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Seus Pets Cadastrados",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (!_isLoadingPets && _petsCadastrados.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                _petsCadastrados.length.toString(),
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade700),
+      body: RefreshIndicator( // Added RefreshIndicator
+        onRefresh: _fetchUserPets,
+        color: const Color(0xFFF9A825),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // Ensure scroll even if content is small
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0), // Adjusted padding
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12.0), // Reduced padding
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.15), // Slightly adjusted shadow
+                        spreadRadius: 1,
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0), // Adjusted
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Seus Pets Cadastrados",
+                              style: TextStyle(
+                                fontSize: 17, // Adjusted
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                        ],
+                            if (!_isLoadingPets && _petsCadastrados.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  _petsCadastrados.length.toString(),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13, // Adjusted
+                                      color: Colors.grey.shade700),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        "Veja as informações do seu pet",
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                      const SizedBox(height: 2), // Reduced
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                        child: Text(
+                          "Arraste para ver os detalhes do seu pet.", // Changed text
+                          style: TextStyle(fontSize: 13, color: Colors.grey.shade600), // Adjusted
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPetCarousel(),
-                    const SizedBox(height: 8.0),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-              Center(child: _buildAlimentadorStatusCard()),
-              const SizedBox(height: 30),
-              _buildSocialMediaFooter(),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0, top: 10),
-                child: Center(
-                  child: Text(
-                    "P.O.T.I\n©2023 Todos os Direitos Reservados",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      const SizedBox(height: 12), // Adjusted
+                      _buildPetCarousel(),
+                      const SizedBox(height: 4.0), // Adjusted
+                    ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24), // Adjusted
+                Center(child: _buildAlimentadorStatusCard()),
+                const SizedBox(height: 24), // Adjusted
+                _buildSocialMediaFooter(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0, top: 8.0), // Adjusted
+                  child: Center(
+                    child: Text(
+                      "P.O.T.I\n©2024 Todos os Direitos Reservados", // Updated year
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600), // Adjusted
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

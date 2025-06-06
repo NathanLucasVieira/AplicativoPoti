@@ -33,8 +33,8 @@ class RegistroAlimentacao {
       dataHora: (data['dataHora'] as Timestamp).toDate(),
       tipo: data['tipo'] as String? ?? 'Não especificado',
       quantidade: (data['quantidade'] as num?)?.toDouble() ?? 0.0,
-      petNome: data['petNome'] as String? ?? '', // Garante que sempre haverá um valor
-      concluido: data['concluido'] as bool? ?? false, // Default para false se não existir
+      petNome: data['petNome'] as String? ?? '',
+      concluido: data['concluido'] as bool? ?? false,
       nomePlano: data['nomePlano'] as String?,
     );
   }
@@ -50,12 +50,11 @@ class HistoricoAlimentacaoPage extends StatefulWidget {
 
 class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  List<RegistroAlimentacao> _historicoCompleto = []; // Guarda todos os registros carregados
-  List<RegistroAlimentacao> _historicoFiltrado = []; // Registros após aplicar o filtro
+  List<RegistroAlimentacao> _historicoCompleto = [];
+  List<RegistroAlimentacao> _historicoFiltrado = [];
   bool _isLoading = true;
-  String _filtroSelecionado = "Hoje"; // Filtro padrão
+  String _filtroSelecionado = "Hoje";
 
-  // Para o DateRangePicker
   DateTimeRange? _intervaloSelecionado;
 
 
@@ -86,17 +85,14 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('historico_alimentacao')
           .where('userId', isEqualTo: currentUser.uid)
-      // Ordenar no cliente após carregar pode ser mais flexível com filtros
-      // .orderBy('dataHora', descending: true)
           .get();
 
       if (mounted) {
         _historicoCompleto = snapshot.docs
             .map((doc) => RegistroAlimentacao.fromFirestore(doc))
             .toList();
-        // Ordena do mais recente para o mais antigo
         _historicoCompleto.sort((a, b) => b.dataHora.compareTo(a.dataHora));
-        _aplicarFiltro(); // Aplica o filtro inicial "Hoje"
+        _aplicarFiltro();
       }
     } catch (e) {
       // ignore: avoid_print
@@ -132,7 +128,7 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
           .where((r) => DateUtils.isSameDay(r.dataHora, ontem))
           .toList();
     } else if (_filtroSelecionado == "Últimos 7 dias") {
-      final seteDiasAtras = hoje.subtract(const Duration(days: 6));
+      final seteDiasAtras = hoje.subtract(const Duration(days: 6)); // includes today
       filtrados = _historicoCompleto.where((r) {
         final dataRegistro = DateTime(r.dataHora.year, r.dataHora.month, r.dataHora.day);
         return !dataRegistro.isBefore(seteDiasAtras) && !dataRegistro.isAfter(hoje);
@@ -145,11 +141,10 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
         return !dataRegistro.isBefore(inicioIntervalo) && !dataRegistro.isAfter(fimIntervalo);
       }).toList();
     }
-    else { // "Todos" ou fallback
+    else { // "Todos" or fallback
       filtrados = List.from(_historicoCompleto);
     }
 
-    // A lista _historicoCompleto já está ordenada, então os subconjuntos filtrados também estarão.
     setState(() {
       _historicoFiltrado = filtrados;
     });
@@ -159,16 +154,16 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
   Widget _buildChipFiltro(String label) {
     bool isSelected = _filtroSelecionado == label;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 3.0), // Slightly reduced padding
       child: ChoiceChip(
-        label: Text(label),
+        label: Text(label, style: TextStyle(fontSize: 13)), // Slightly smaller font
         selected: isSelected,
         onSelected: (selected) {
           if (selected) {
             if (mounted) {
               setState(() {
                 _filtroSelecionado = label;
-                _intervaloSelecionado = null; // Reseta o intervalo se outro chip for selecionado
+                if (label != "Intervalo") _intervaloSelecionado = null;
                 _aplicarFiltro();
               });
             }
@@ -184,6 +179,8 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
             side: BorderSide(
               color: isSelected ? const Color(0xFFF9A825) : Colors.grey.shade300,
             )),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), // Adjust padding
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, // More compact tap target
       ),
     );
   }
@@ -191,13 +188,13 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
   Future<void> _selecionarIntervalo() async {
     final picked = await showDateRangePicker(
         context: context,
-        firstDate: DateTime(2020), // Data inicial permitida
-        lastDate: DateTime.now().add(const Duration(days: 365)), // Data final permitida
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
         initialDateRange: _intervaloSelecionado ?? DateTimeRange(
           start: DateTime.now().subtract(const Duration(days: 7)),
           end: DateTime.now(),
         ),
-        locale: const Locale('pt', 'BR'), // Localização para português
+        locale: const Locale('pt', 'BR'),
         helpText: 'SELECIONE UM INTERVALO',
         cancelText: 'CANCELAR',
         confirmText: 'OK',
@@ -205,14 +202,14 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
           return Theme(
             data: ThemeData.light().copyWith(
               colorScheme: const ColorScheme.light(
-                primary: Color(0xFFF9A825), // Cor principal
-                onPrimary: Colors.white, // Cor do texto sobre a cor principal
-                onSurface: Colors.black87, // Cor do texto geral
+                primary: Color(0xFFF9A825),
+                onPrimary: Colors.white,
+                onSurface: Colors.black87,
               ),
               dialogBackgroundColor: Colors.white,
               textButtonTheme: TextButtonThemeData(
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFF9A825), // Cor dos botões de texto
+                  foregroundColor: const Color(0xFFF9A825),
                 ),
               ),
             ),
@@ -224,7 +221,7 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
       if (mounted) {
         setState(() {
           _intervaloSelecionado = picked;
-          _filtroSelecionado = "Intervalo"; // Define o filtro para "Intervalo"
+          _filtroSelecionado = "Intervalo";
           _aplicarFiltro();
         });
       }
@@ -245,26 +242,27 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0), // Adjusted
             child: Card(
               elevation: 2.0,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0)),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 6.0), // Adjusted
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
+                    children: [ // Removed MainAxisAlignment for tighter packing
                       _buildChipFiltro("Hoje"),
                       _buildChipFiltro("Ontem"),
                       _buildChipFiltro("Últimos 7 dias"),
-                      _buildChipFiltro("Todos"), // Adicionado para ver todos os registros
+                      _buildChipFiltro("Todos"),
                       IconButton(
-                        icon: const Icon(Icons.calendar_today_outlined, color: Color(0xFFF9A825)),
+                        icon: const Icon(Icons.calendar_today_outlined, color: Color(0xFFF9A825), size: 22), // Smaller icon
                         onPressed: _selecionarIntervalo,
                         tooltip: "Selecionar intervalo personalizado",
+                        padding: const EdgeInsets.symmetric(horizontal: 8), // Adjust padding
+                        constraints: const BoxConstraints(), // Remove default IconButton constraints if needed
                       ),
                     ],
                   ),
@@ -284,36 +282,38 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
                   _historicoCompleto.isEmpty
                       ? "Nenhum registro de alimentação encontrado."
                       : "Nenhum registro encontrado para o filtro selecionado.",
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  style: const TextStyle(fontSize: 15, color: Colors.grey), // Adjusted
                   textAlign: TextAlign.center,
                 ),
               ),
             )
                 : RefreshIndicator(
-              onRefresh: _carregarHistorico, // Permite "puxar para atualizar"
+              onRefresh: _carregarHistorico,
               color: const Color(0xFFF9A825),
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0), // Adjusted
                 itemCount: _historicoFiltrado.length,
                 itemBuilder: (context, index) {
                   final registro = _historicoFiltrado[index];
                   return Card(
                     elevation: 1.5,
-                    margin: const EdgeInsets.symmetric(vertical: 6.0),
+                    margin: const EdgeInsets.symmetric(vertical: 5.0), // Adjusted
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                     child: ListTile(
                       leading: CircleAvatar(
+                        radius: 22, // Slightly smaller
                         backgroundColor: registro.concluido
-                            ? const Color(0xFFF9A825).withOpacity(0.2)
-                            : Colors.orange.withOpacity(0.15),
+                            ? const Color(0xFFF9A825).withOpacity(0.15) // Adjusted opacity
+                            : Colors.orange.withOpacity(0.1),
                         child: Icon(
                           registro.tipo.toLowerCase().contains('plano') || registro.tipo.toLowerCase().contains('rotina')
                               ? Icons.calendar_month_outlined
                               : registro.tipo.toLowerCase().contains('manual')
-                              ? Icons.touch_app_outlined // Ícone para manual
-                              : Icons.pets, // Ícone padrão
+                              ? Icons.touch_app_outlined
+                              : Icons.pets,
+                          size: 22, // Smaller icon
                           color: registro.concluido
                               ? const Color(0xFFF9A825)
                               : Colors.orange.shade700,
@@ -322,20 +322,23 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
                       title: Text(
                         registro.nomePlano?.isNotEmpty == true ? registro.nomePlano! : registro.tipo,
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 15),
+                            fontWeight: FontWeight.w600, fontSize: 14.5), // Adjusted
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            // Formata a data e hora para o padrão brasileiro
-                            DateFormat('EEEE, dd/MM/yyyy – HH:mm','pt_BR').format(registro.dataHora),
-                            style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                            DateFormat('EEEE, dd/MM/yy – HH:mm','pt_BR').format(registro.dataHora), // Shorter year
+                            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700), // Adjusted
                           ),
                           Text(
-                            "Quantidade: ${registro.quantidade % 1 == 0 ? registro.quantidade.toInt() : registro.quantidade.toStringAsFixed(1)}g" // Mostra inteiro ou decimal
-                                "${registro.petNome.isNotEmpty ? ' para ${registro.petNome}' : ''}",
-                            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                            "Qtd: ${registro.quantidade % 1 == 0 ? registro.quantidade.toInt() : registro.quantidade.toStringAsFixed(1)}g"
+                                "${registro.petNome.isNotEmpty ? ' (${registro.petNome})' : ''}", // Pet name in parenthesis
+                            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600), // Adjusted
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -346,9 +349,10 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
                         color: registro.concluido
                             ? Colors.green.shade600
                             : Colors.orange.shade600,
-                        size: 28,
+                        size: 26, // Adjusted
                       ),
-                      isThreeLine: true,
+                      isThreeLine: true, // Remains true to accommodate two lines of subtitle
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12), // Adjust padding
                     ),
                   );
                 },

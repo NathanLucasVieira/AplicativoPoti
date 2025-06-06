@@ -18,72 +18,80 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Widget _buildContentArea(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Ensure cardWidth is explicitly a double
+    final double cardWidth = screenWidth * 0.9 > 400 ? 400.0 : screenWidth * 0.9;
+
+
     return Container(
       color: const Color(0xFFFAFAFA),
-      padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 30.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0), // Reduced horizontal padding
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              width: 380,
-              height: 400,
-              padding: const EdgeInsets.all(30.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'imagens/Add_Dispositivo.png',
-                    width: 100,
-                    height: 100,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text("Sem dispositivos",
-                      style:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 15),
-                  const Text("Conecte-se ao alimentador\nVia Wi-Fi",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.grey)),
-                  const Spacer(),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _showPopup = true;
-                      });
-                    },
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text("Adicionar Dispositivos",
-                        style: TextStyle(color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF9A825),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 18),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      textStyle: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+          Expanded( // Added Expanded to allow card to center properly
+            child: Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: cardWidth, // Responsive width
+                // height: 400, // Removed fixed height, let content define it
+                padding: const EdgeInsets.all(20.0), // Reduced padding
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: const Offset(0, 3),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min, // Important when height is not fixed
+                  children: [
+                    Image.asset(
+                      'imagens/Add_Dispositivo.png',
+                      width: 80, // Reduced size
+                      height: 80, // Reduced size
+                    ),
+                    const SizedBox(height: 20),
+                    const Text("Sem dispositivos",
+                        style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Reduced font size
+                    const SizedBox(height: 10), // Reduced spacing
+                    const Text("Conecte-se ao alimentador\nVia Wi-Fi",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: Colors.grey)),
+                    const SizedBox(height: 30), // Added Spacer equivalent
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _showPopup = true;
+                        });
+                      },
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text("Adicionar Dispositivos",
+                          style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF9A825),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 15), // Adjusted padding
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        textStyle: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold), // Adjusted font size
+                      ),
+                    ),
+                    const SizedBox(height: 10), // Reduced spacing
+                  ],
+                ),
               ),
             ),
           ),
-          const Spacer(),
+          // Spacer removed to use Expanded for centering the card
         ],
       ),
     );
@@ -91,14 +99,12 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
 
   Widget _buildAddDevicePopup(BuildContext context) {
     Widget popupContent;
-    Alignment alignment;
-    double containerWidth;
-    double? containerHeight;
+    final screenWidth = MediaQuery.of(context).size.width;
+    double popupWidth;
 
     if (!_permGranted) {
-      alignment = const Alignment(0.85, 0.0);
-      containerWidth = 350;
-      containerHeight = null;
+      // Ensure popupWidth is double
+      popupWidth = screenWidth * 0.85 > 350 ? 350.0 : screenWidth * 0.85;
       popupContent = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -116,7 +122,10 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                 });
               },
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF9A825)),
+                  backgroundColor: const Color(0xFFF9A825),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  textStyle: const TextStyle(fontSize: 14)
+              ),
               child: const Text("Conceder Permissão",
                   style: TextStyle(color: Colors.white)),
             ),
@@ -124,9 +133,8 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
         ],
       );
     } else {
-      alignment = const Alignment(0.0, 0.6);
-      containerWidth = 500;
-      containerHeight = 300.0; // Altura ajustável se necessário
+      // Ensure popupWidth is double
+      popupWidth = screenWidth * 0.9 > 450 ? 450.0 : screenWidth * 0.9;
       popupContent = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -144,7 +152,6 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                   _showPopup = false;
                   _permGranted = false;
                 });
-                // Alterado de volta para MaterialPageRoute para consistência com main.dart simplificado
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -152,7 +159,10 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF9A825)),
+                  backgroundColor: const Color(0xFFF9A825),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  textStyle: const TextStyle(fontSize: 15)
+              ),
               child: const Text("Cadastrar",
                   style: TextStyle(color: Colors.white)),
             ),
@@ -161,21 +171,21 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
       );
     }
 
-    return Align(
-      alignment: alignment,
+    return Center( // Use Center for the popup dialog
       child: Material(
         elevation: 8.0,
         borderRadius: BorderRadius.circular(20.0),
         child: Container(
-          width: containerWidth,
-          height: containerHeight, // Pode ser null para altura automática
+          width: popupWidth,
+          // height: containerHeight, // Height will be intrinsic
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8), // Max height
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.0),
           ),
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Importante se height for null
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -202,8 +212,7 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
               ),
               const Divider(),
               const SizedBox(height: 15),
-              // Flexible é útil se o conteúdo puder exceder a altura
-              Flexible(
+              Flexible( // Allow content to scroll if it overflows
                 child: SingleChildScrollView(
                   child: popupContent,
                 ),

@@ -20,8 +20,4 @@ tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
 
-dependencies{
-    classpath 'com.android.tools.build:gradle:7.3.0'
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:"
-    classpath 'com.google.gms:google-services:4.3.15'
-}
+// O bloco dependencies problemático foi removido daqui.
