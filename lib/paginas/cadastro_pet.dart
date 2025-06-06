@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:projetoflutter/paginas/cadastro_pet_peso.dart';
-import 'package:projetoflutter/widgets/side_bar_menu.dart';
-import 'package:projetoflutter/widgets/app_bar_poti.dart';
+import 'package:trabalhopoti/paginas/cadastro_pet_peso.dart';
+import 'package:trabalhopoti/widgets/side_bar_menu.dart';
+import 'package:trabalhopoti/widgets/app_bar_poti.dart'; // <<< CORREÇÃO
 
 class CadastroPetsPage extends StatefulWidget {
   const CadastroPetsPage({super.key});
@@ -66,7 +66,7 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
       );
 
       if (mounted) {
-        Navigator.pushReplacement( // Changed to pushReplacement
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CadastroPetPesoPage(petId: petId),
@@ -74,7 +74,6 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
         );
       }
     } catch (e) {
-      // ignore: avoid_print
       print("Erro ao cadastrar pet: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -105,21 +104,21 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
       ),
       drawer: const SideMenu(),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20.0 : 50.0, vertical: 30.0), // Adaptive padding
+        padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20.0 : 50.0, vertical: 30.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Olá Tutor\nSeja bem Vindo ao P.O.T.I',
               style: TextStyle(
-                fontSize: 24, // Slightly reduced for mobile
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 30), // Adjusted spacing
+            const SizedBox(height: 30),
             Container(
-              padding: EdgeInsets.all(isSmallScreen ? 20.0 : 40.0), // Adaptive padding
+              padding: EdgeInsets.all(isSmallScreen ? 20.0 : 40.0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20.0),
@@ -142,7 +141,7 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                         icon: const Icon(Icons.arrow_back, color: Colors.grey),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      const Flexible( // Added Flexible to prevent overflow
+                      const Flexible(
                         child: Text(
                           'Nome e Raça',
                           style: TextStyle(
@@ -168,12 +167,12 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                     color: Color(0xFFF9A825),
                     minHeight: 6,
                   ),
-                  const SizedBox(height: 30), // Adjusted spacing
+                  const SizedBox(height: 30),
                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
                       CircleAvatar(
-                        radius: isSmallScreen ? 60 : 80, // Adaptive radius
+                        radius: isSmallScreen ? 60 : 80,
                         backgroundColor: Colors.grey.shade300,
                         backgroundImage: const NetworkImage(
                             'https://via.placeholder.com/160/FFA500/000000?Text=Pet'),
@@ -195,25 +194,21 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                       )
                     ],
                   ),
-                  const SizedBox(height: 30), // Adjusted spacing
-
-                  // Changed Row to Column for text fields on small screens
+                  const SizedBox(height: 30),
                   _buildTextField('Qual é o Nome do seu pet?', 'Nome:', _nomeController),
                   const SizedBox(height: 20),
                   _buildTextField('Qual é Raça do seu pet?', 'Raça:', _racaController),
-
-                  const SizedBox(height: 40), // Adjusted spacing
-                  // Changed Row to Column for buttons on small screens
+                  const SizedBox(height: 40),
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch, // Make buttons take full width
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       TextButton(
                         onPressed: () {
                           if (_nomeController.text.isNotEmpty && _racaController.text.isNotEmpty) {
-                            Navigator.push( // Keep as push, user might want to go back
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => CadastroPetPesoPage(petId: "temp_id_simulado_para_proxima_etapa"), // This ID will be replaced upon actual save
+                                builder: (context) => CadastroPetPesoPage(petId: "temp_id_simulado_para_proxima_etapa"),
                               ),
                             );
                           } else {
@@ -235,7 +230,7 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                         onPressed: _isLoading ? null : _cadastrarPet,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFF9A825),
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15), // Adjusted padding
+                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -247,13 +242,13 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
                             : const Text(
-                          'Confirmar e Próximo', // Changed text for clarity
+                          'Confirmar e Próximo',
                           style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(height: 10),
                       TextButton(
-                        onPressed: () => Navigator.pop(context), // Back or cancel
+                        onPressed: () => Navigator.pop(context),
                         child: const Text(
                           'Cancelar',
                           style: TextStyle(color: Colors.grey, fontSize: 16),
@@ -265,11 +260,9 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
               ),
             ),
             const SizedBox(height: 30),
-            // Footer can be simplified or made adaptive if needed
-            // For now, keeping it as is, but consider visibility on very small screens
             const Align(
               alignment: Alignment.bottomCenter,
-              child: Wrap( // Use Wrap for social media icons
+              child: Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 10,
                 runSpacing: 10,
@@ -309,7 +302,7 @@ class _CadastroPetsPageState extends State<CadastroPetsPage> {
               borderRadius: BorderRadius.circular(10.0),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15), // Adjusted padding
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           ),
         ),
       ],

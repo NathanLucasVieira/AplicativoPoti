@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:projetoflutter/widgets/side_bar_menu.dart';
-import 'package:projetoflutter/widgets/app_bar_poti.dart';
-// Importe a TelaDispositivoConectado para navegação direta
-import 'package:projetoflutter/paginas/tela_dispositivo_conectado.dart';
+import 'package:trabalhopoti/widgets/side_bar_menu.dart';
+import 'package:trabalhopoti/widgets/app_bar_poti.dart'; // <<< CORREÇÃO
+import 'package:trabalhopoti/paginas/tela_dispositivo_conectado.dart';
 
 class PaginaInicialRefatorada extends StatefulWidget {
   const PaginaInicialRefatorada({super.key});
@@ -19,23 +18,21 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
 
   Widget _buildContentArea(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // Ensure cardWidth is explicitly a double
     final double cardWidth = screenWidth * 0.9 > 400 ? 400.0 : screenWidth * 0.9;
 
 
     return Container(
       color: const Color(0xFFFAFAFA),
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0), // Reduced horizontal padding
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded( // Added Expanded to allow card to center properly
+          Expanded(
             child: Align(
               alignment: Alignment.center,
               child: Container(
-                width: cardWidth, // Responsive width
-                // height: 400, // Removed fixed height, let content define it
-                padding: const EdgeInsets.all(20.0), // Reduced padding
+                width: cardWidth,
+                padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20.0),
@@ -50,22 +47,22 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min, // Important when height is not fixed
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Image.asset(
                       'imagens/Add_Dispositivo.png',
-                      width: 80, // Reduced size
-                      height: 80, // Reduced size
+                      width: 80,
+                      height: 80,
                     ),
                     const SizedBox(height: 20),
                     const Text("Sem dispositivos",
                         style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Reduced font size
-                    const SizedBox(height: 10), // Reduced spacing
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
                     const Text("Conecte-se ao alimentador\nVia Wi-Fi",
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 14, color: Colors.grey)),
-                    const SizedBox(height: 30), // Added Spacer equivalent
+                    const SizedBox(height: 30),
                     ElevatedButton.icon(
                       onPressed: () {
                         setState(() {
@@ -78,20 +75,19 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF9A825),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 15), // Adjusted padding
+                            horizontal: 24, vertical: 15),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                         textStyle: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold), // Adjusted font size
+                            fontSize: 15, fontWeight: FontWeight.bold),
                       ),
                     ),
-                    const SizedBox(height: 10), // Reduced spacing
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),
             ),
           ),
-          // Spacer removed to use Expanded for centering the card
         ],
       ),
     );
@@ -103,7 +99,6 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
     double popupWidth;
 
     if (!_permGranted) {
-      // Ensure popupWidth is double
       popupWidth = screenWidth * 0.85 > 350 ? 350.0 : screenWidth * 0.85;
       popupContent = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,7 +128,6 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
         ],
       );
     } else {
-      // Ensure popupWidth is double
       popupWidth = screenWidth * 0.9 > 450 ? 450.0 : screenWidth * 0.9;
       popupContent = Column(
         mainAxisSize: MainAxisSize.min,
@@ -146,7 +140,6 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
             alignment: Alignment.centerRight,
             child: ElevatedButton(
               onPressed: () {
-                // ignore: avoid_print
                 print("Dispositivo cadastrado - Conexão Fictícia");
                 setState(() {
                   _showPopup = false;
@@ -171,14 +164,13 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
       );
     }
 
-    return Center( // Use Center for the popup dialog
+    return Center(
       child: Material(
         elevation: 8.0,
         borderRadius: BorderRadius.circular(20.0),
         child: Container(
           width: popupWidth,
-          // height: containerHeight, // Height will be intrinsic
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8), // Max height
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.0),
@@ -212,7 +204,7 @@ class _PaginaInicialRefatoradaState extends State<PaginaInicialRefatorada> {
               ),
               const Divider(),
               const SizedBox(height: 15),
-              Flexible( // Allow content to scroll if it overflows
+              Flexible(
                 child: SingleChildScrollView(
                   child: popupContent,
                 ),

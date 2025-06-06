@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:projetoflutter/widgets/pet_card.dart'; // Para a classe Pet
+import 'package:trabalhopoti/widgets/pet_card.dart';
 
 class AppBarPoti extends StatelessWidget implements PreferredSizeWidget {
   final String? titleText;
@@ -19,12 +19,11 @@ class AppBarPoti extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     Widget titleWidget;
 
-    // A lógica para exibir o pet selecionado se disponível e com callback
-    if (selectedPet != null && onSelectedPetTap != null) {
+    // Título customizado quando um pet está selecionado.
+    if (selectedPet != null) {
       titleWidget = GestureDetector(
         onTap: onSelectedPetTap,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             CircleAvatar(
@@ -45,13 +44,14 @@ class AppBarPoti extends StatelessWidget implements PreferredSizeWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (onSelectedPetTap != null)
+              const Icon(Icons.arrow_drop_down, color: Colors.black54),
           ],
         ),
       );
     } else {
-      // Comportamento padrão: Logo P.O.T.I e titleText (ou "P.O.T.I")
+      // Título padrão com logo.
       titleWidget = Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset('imagens/logo_sem_fundo.png', height: 30),
@@ -68,14 +68,12 @@ class AppBarPoti extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.white,
       elevation: 1.0,
       iconTheme: const IconThemeData(color: Colors.black54),
+      // Ícone para abrir o menu lateral.
       leading: IconButton(
         icon: const Icon(Icons.menu),
         onPressed: () {
-          if (scaffoldKey.currentState?.isDrawerOpen ?? false) {
-            scaffoldKey.currentState?.closeDrawer();
-          } else {
-            scaffoldKey.currentState?.openDrawer();
-          }
+
+          scaffoldKey.currentState?.openDrawer();
         },
         tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
       ),

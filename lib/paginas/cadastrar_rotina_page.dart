@@ -1,10 +1,9 @@
-// lib/paginas/cadastrar_rotina_page.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:projetoflutter/widgets/app_bar_poti.dart';
-import 'package:projetoflutter/widgets/side_bar_menu.dart';
+import 'package:trabalhopoti/widgets/app_bar_poti.dart'; // <<< CORREÇÃO
+import 'package:trabalhopoti/widgets/side_bar_menu.dart';
 
 class CadastrarRotinaPage extends StatefulWidget {
   const CadastrarRotinaPage({super.key});
@@ -71,7 +70,7 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
     final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: _selectedDate ?? DateTime.now(),
-        firstDate: DateTime.now().subtract(const Duration(days: 1)), // Allow today
+        firstDate: DateTime.now().subtract(const Duration(days: 1)),
         lastDate: DateTime(2101),
         locale: const Locale('pt', 'BR'),
         builder: (context, child) {
@@ -140,9 +139,9 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
         'nomePlano': _nomePlanoController.text.trim(),
         'dataHora': Timestamp.fromDate(combinedDateTime),
         'quantidade': double.tryParse(_quantidadeController.text.trim()) ?? 0.0,
-        'tipo': 'Plano - ${_nomePlanoController.text.trim()}', // More descriptive
-        'concluido': false, // Default for a new plan
-        'petNome': '', // Consider adding pet selection if multiple pets
+        'tipo': 'Plano - ${_nomePlanoController.text.trim()}',
+        'concluido': false,
+        'petNome': '',
         'criadoEm': Timestamp.now(),
       });
 
@@ -155,7 +154,7 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
         _selectedDate = null;
         _selectedTime = null;
       });
-      _formKey.currentState?.reset(); // Reset form state
+      _formKey.currentState?.reset();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao cadastrar rotina: ${e.toString()}'), backgroundColor: Colors.red),
@@ -172,7 +171,6 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
   @override
   Widget build(BuildContext context) {
     const Color laranjaPrincipal = Color(0xFFF9A825);
-    // const Color laranjaClarinho = Color(0xFFEEEEEE); // Using white for card background for better contrast
 
     return Scaffold(
       key: _scaffoldKey,
@@ -184,7 +182,7 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
       backgroundColor: const Color(0xFFFAFAFA),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0), // Adjusted padding
+          padding: const EdgeInsets.all(16.0),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
             child: Card(
@@ -192,9 +190,9 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
               ),
-              color: Colors.white, // Changed to white
+              color: Colors.white,
               child: Padding(
-                padding: const EdgeInsets.all(20.0), // Adjusted padding
+                padding: const EdgeInsets.all(20.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -205,12 +203,12 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                         "Detalhes da Rotina",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 20, // Adjusted
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.brown.shade700,
                         ),
                       ),
-                      const SizedBox(height: 20), // Adjusted
+                      const SizedBox(height: 20),
                       TextFormField(
                         controller: _nomePlanoController,
                         decoration: InputDecoration(
@@ -231,10 +229,10 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16), // Adjusted
+                      const SizedBox(height: 16),
                       Row(
                         children: [
-                          Flexible( // Changed to Flexible from Expanded
+                          Flexible(
                             child: InkWell(
                               onTap: () => _selectDate(context),
                               child: InputDecorator(
@@ -242,29 +240,29 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                                   labelText: 'Data',
                                   labelStyle: TextStyle(color: Colors.brown.shade400),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-                                  prefixIcon: Icon(Icons.calendar_today, color: laranjaPrincipal, size: 20), // Smaller icon
+                                  prefixIcon: Icon(Icons.calendar_today, color: laranjaPrincipal, size: 20),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(color: laranjaPrincipal, width: 2.0),
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
                                   floatingLabelStyle: const TextStyle(color: laranjaPrincipal),
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10), // Adjusted padding
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                                 ),
                                 child: Text(
                                   _selectedDate == null
-                                      ? 'Selecione' // Simplified text
-                                      : DateFormat('dd/MM/yy', 'pt_BR').format(_selectedDate!), // Shorter date format
+                                      ? 'Selecione'
+                                      : DateFormat('dd/MM/yy', 'pt_BR').format(_selectedDate!),
                                   style: TextStyle(
                                     color: _selectedDate == null ? Colors.grey.shade700 : Colors.black87,
-                                    fontSize: 15, // Adjusted font size
+                                    fontSize: 15,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8), // Reduced spacing
-                          Flexible( // Changed to Flexible
+                          const SizedBox(width: 8),
+                          Flexible(
                             child: InkWell(
                               onTap: () => _selectTime(context),
                               child: InputDecorator(
@@ -272,21 +270,21 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                                   labelText: 'Horário',
                                   labelStyle: TextStyle(color: Colors.brown.shade400),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-                                  prefixIcon: Icon(Icons.access_time, color: laranjaPrincipal, size: 20), // Smaller icon
+                                  prefixIcon: Icon(Icons.access_time, color: laranjaPrincipal, size: 20),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(color: laranjaPrincipal, width: 2.0),
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
                                   floatingLabelStyle: const TextStyle(color: laranjaPrincipal),
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10), // Adjusted padding
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                                 ),
                                 child: Text(
                                   _selectedTime == null
-                                      ? 'Selecione' // Simplified text
+                                      ? 'Selecione'
                                       : _selectedTime!.format(context),
                                   style: TextStyle(
                                     color: _selectedTime == null ? Colors.grey.shade700 : Colors.black87,
-                                    fontSize: 15, // Adjusted font size
+                                    fontSize: 15,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -295,14 +293,14 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16), // Adjusted
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _quantidadeController,
                         decoration: InputDecoration(
                           labelText: 'Quantidade (gramas)',
                           labelStyle: TextStyle(color: Colors.brown.shade400),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-                          prefixIcon: Icon(Icons.restaurant_menu, color: laranjaPrincipal, size: 20), // Smaller icon
+                          prefixIcon: Icon(Icons.restaurant_menu, color: laranjaPrincipal, size: 20),
                           suffixText: 'g',
                           focusedBorder: OutlineInputBorder(
                             borderSide: const BorderSide(color: laranjaPrincipal, width: 2.0),
@@ -321,41 +319,40 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20), // Adjusted
+                      const SizedBox(height: 20),
                       Center(
                         child: Image.asset(
                           'imagens/food_bowl.png',
-                          height: 80, // Reduced height
+                          height: 80,
                           fit: BoxFit.contain,
                           color: laranjaPrincipal.withOpacity(0.8),
                           errorBuilder: (context, error, stackTrace) {
-                            // ignore: avoid_print
                             print("Erro ao carregar imagem da tigela: $error");
                             return Icon(Icons.pets, size: 80, color: Colors.grey.shade400);
                           },
                         ),
                       ),
-                      const SizedBox(height: 24), // Adjusted
+                      const SizedBox(height: 24),
                       _isLoading
                           ? const Center(child: CircularProgressIndicator(color: laranjaPrincipal))
                           : ElevatedButton.icon(
-                        icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 20), // Adjusted size
+                        icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
                         label: const Text(
                           'Adicionar Rotina',
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600), // Adjusted size
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                         onPressed: _cadastrarRotina,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: laranjaPrincipal,
-                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20), // Adjusted padding
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                           elevation: 3.0,
-                          minimumSize: const Size(double.infinity, 48), // Adjusted height
+                          minimumSize: const Size(double.infinity, 48),
                         ),
                       ),
-                      const SizedBox(height: 10), // Adjusted
+                      const SizedBox(height: 10),
                       TextButton(
                         onPressed: () {
                           if (_isLoading) return;
@@ -369,10 +366,10 @@ class _CadastrarRotinaPageState extends State<CadastrarRotinaPage> {
                         },
                         child: Text(
                           'Limpar Campos',
-                          style: TextStyle(color: Colors.brown.shade500, fontSize: 14), // Adjusted size
+                          style: TextStyle(color: Colors.brown.shade500, fontSize: 14),
                         ),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8), // Adjusted padding
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                         ),
                       ),
                     ],

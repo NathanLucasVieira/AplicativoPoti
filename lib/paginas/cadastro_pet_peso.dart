@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:projetoflutter/paginas/tela_dispositivo_conectado.dart';
-import 'package:projetoflutter/widgets/side_bar_menu.dart';
-import 'package:projetoflutter/widgets/app_bar_poti.dart';
+import 'package:trabalhopoti/paginas/tela_dispositivo_conectado.dart';
+import 'package:trabalhopoti/widgets/side_bar_menu.dart';
+import 'package:trabalhopoti/widgets/app_bar_poti.dart'; // <<< CORREÇÃO
 
 class CadastroPetPesoPage extends StatefulWidget {
   final String petId;
@@ -36,7 +36,7 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
 
     try {
       await _firestore.collection('pets').doc(widget.petId).update({
-        'peso': _selectedPeso, // Firestore field is 'peso', class Pet field is 'tamanho'
+        'peso': _selectedPeso,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,11 +53,10 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
         );
       }
     } catch (e) {
-      // ignore: avoid_print
       print("Erro ao atualizar peso: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Erro ao salvar o tamanho: ${e.toString()}'), // Message changed to 'tamanho' for user
+            content: Text('Erro ao salvar o tamanho: ${e.toString()}'),
             backgroundColor: Colors.red),
       );
     } finally {
@@ -72,9 +71,9 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
   Widget _buildPesoCard(
       String titulo, String subtitulo, IconData icone, String valor) {
     bool isSelected = _selectedPeso == valor;
-    double cardSize = MediaQuery.of(context).size.width / 3 - 24; // Responsive card size
-    cardSize = cardSize < 100 ? 100 : cardSize; // Min size
-    cardSize = cardSize > 150 ? 150 : cardSize; // Max size
+    double cardSize = MediaQuery.of(context).size.width / 3 - 24;
+    cardSize = cardSize < 100 ? 100 : cardSize;
+    cardSize = cardSize > 150 ? 150 : cardSize;
 
 
     return GestureDetector(
@@ -84,10 +83,10 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
         });
       },
       child: Container(
-        width: cardSize, // Make width responsive or fixed but smaller
-        height: cardSize + 20, // Adjusted height
-        margin: const EdgeInsets.all(6), // Add margin for Wrap spacing
-        padding: const EdgeInsets.all(10.0), // Reduced padding
+        width: cardSize,
+        height: cardSize + 20,
+        margin: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(10.0),
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFFF9A825).withOpacity(0.1)
@@ -111,7 +110,7 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icone,
-                size: cardSize * 0.3, // Icon size relative to card
+                size: cardSize * 0.3,
                 color:
                 isSelected ? const Color(0xFFF9A825) : Colors.grey.shade600),
             const SizedBox(height: 8),
@@ -119,7 +118,7 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
               titulo,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: cardSize * 0.12, // Font size relative to card
+                fontSize: cardSize * 0.12,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? Colors.black87 : Colors.black54,
               ),
@@ -129,7 +128,7 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
               subtitulo,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: cardSize * 0.1, // Font size relative to card
+                fontSize: cardSize * 0.1,
                 color: isSelected ? Colors.black54 : Colors.grey,
               ),
             ),
@@ -149,25 +148,25 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
       backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBarPoti(
         scaffoldKey: _scaffoldKey,
-        titleText: "Tamanho do Pet", // Changed title
+        titleText: "Tamanho do Pet",
       ),
       drawer: const SideMenu(),
       body: SingleChildScrollView(
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20.0 : 50.0, vertical: 30.0), // Adaptive padding
+          padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20.0 : 50.0, vertical: 30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Olá Tutor\nSeja bem Vindo ao P.O.T.I',
                 style: TextStyle(
-                    fontSize: 24, // Reduced
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87),
               ),
-              const SizedBox(height: 30), // Adjusted
+              const SizedBox(height: 30),
               Container(
-                padding: EdgeInsets.all(isSmallScreen ? 20.0 : 30.0), // Adaptive
+                padding: EdgeInsets.all(isSmallScreen ? 20.0 : 30.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20.0),
@@ -189,16 +188,16 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
                           icon: const Icon(Icons.arrow_back, color: Colors.grey),
                           onPressed: () => Navigator.pop(context),
                         ),
-                        const Flexible( // Added flexible
+                        const Flexible(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center, // Center align text
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text('Adicione Informações',
                                 style: TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              Text('Tamanho', // Changed from "Peso" to "Tamanho" for consistency
+                              Text('Tamanho',
                                   style: TextStyle(
                                       fontSize: 14, color: Colors.grey)),
                             ],
@@ -216,25 +215,24 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
                       color: Color(0xFFF9A825),
                       minHeight: 6,
                     ),
-                    const SizedBox(height: 25), // Adjusted
+                    const SizedBox(height: 25),
                     CircleAvatar(
-                      radius: isSmallScreen ? 50 : 60, // Adaptive
+                      radius: isSmallScreen ? 50 : 60,
                       backgroundImage: const NetworkImage(
                           'https://via.placeholder.com/120/FFA500/000000?Text=Pet'),
                       backgroundColor: Colors.grey,
                     ),
-                    const SizedBox(height: 25), // Adjusted
+                    const SizedBox(height: 25),
                     const Text(
                       'Qual é o Tamanho do seu pet?',
                       style:
                       TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 20),
-                    // Used Wrap for peso cards
                     Wrap(
                       alignment: WrapAlignment.center,
-                      spacing: 8.0, // Espaço horizontal entre os cards
-                      runSpacing: 8.0, // Espaço vertical entre as linhas de cards
+                      spacing: 8.0,
+                      runSpacing: 8.0,
                       children: [
                         _buildPesoCard(
                             'Pequeno', 'Abaixo 14kg', Icons.pets, 'Pequeno'),
@@ -245,7 +243,6 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
                       ],
                     ),
                     const SizedBox(height: 30),
-                    // Changed Row to Column for buttons
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -255,7 +252,7 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
                                 content: Text(
                                     'Este é o último passo do cadastro inicial.')));
                           },
-                          child: const Text('Último passo', // Simplified text
+                          child: const Text('Último passo',
                               style: TextStyle(
                                   color: Colors.black54,
                                   decoration: TextDecoration.underline)),
@@ -266,7 +263,7 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFF9A825),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 15), // Adjusted
+                                horizontal: 30, vertical: 15),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10)),
                           ),
@@ -276,7 +273,7 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
                               height: 20,
                               child: CircularProgressIndicator(
                                   color: Colors.white, strokeWidth: 2))
-                              : const Text('Confirmar Cadastro', // Changed text
+                              : const Text('Confirmar Cadastro',
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -287,11 +284,11 @@ class _CadastroPetPesoPageState extends State<CadastroPetPesoPage> {
                           onPressed: () {
                             Navigator.pushAndRemoveUntil(
                               context,
-                              MaterialPageRoute(builder: (context) => const TelaDispositivoConectado()), // Or PaginaInicialRefatorada
+                              MaterialPageRoute(builder: (context) => const TelaDispositivoConectado()),
                                   (Route<dynamic> route) => false,
                             );
                           },
-                          child: const Text('Ignorar por agora', // Changed text
+                          child: const Text('Ignorar por agora',
                               style: TextStyle(
                                   color: Colors.grey, fontSize: 16)),
                         ),

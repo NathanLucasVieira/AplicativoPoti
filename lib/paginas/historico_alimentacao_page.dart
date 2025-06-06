@@ -1,27 +1,25 @@
-// lib/paginas/historico_alimentacao_page.dart
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Para formatação de data e hora
+import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:projetoflutter/widgets/app_bar_poti.dart';
-import 'package:projetoflutter/widgets/side_bar_menu.dart';
+import 'package:trabalhopoti/widgets/app_bar_poti.dart'; // <<< CORREÇÃO
+import 'package:trabalhopoti/widgets/side_bar_menu.dart';
 
-// Modelo de dados para um registro de alimentação
 class RegistroAlimentacao {
   final String id;
   final DateTime dataHora;
-  final String tipo; // Ex: "Programada", "Manual", "Plano - Viagem"
-  final double quantidade; // Em gramas
-  final String petNome; // Nome do pet, pode ser vazio
+  final String tipo;
+  final double quantidade;
+  final String petNome;
   final bool concluido;
-  final String? nomePlano; // Para guardar o nome do plano original se aplicável
+  final String? nomePlano;
 
   RegistroAlimentacao({
     required this.id,
     required this.dataHora,
     required this.tipo,
     required this.quantidade,
-    this.petNome = "", // Default como string vazia se não informado
+    this.petNome = "",
     required this.concluido,
     this.nomePlano,
   });
@@ -95,7 +93,6 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
         _aplicarFiltro();
       }
     } catch (e) {
-      // ignore: avoid_print
       print("Erro ao carregar histórico: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -128,7 +125,7 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
           .where((r) => DateUtils.isSameDay(r.dataHora, ontem))
           .toList();
     } else if (_filtroSelecionado == "Últimos 7 dias") {
-      final seteDiasAtras = hoje.subtract(const Duration(days: 6)); // includes today
+      final seteDiasAtras = hoje.subtract(const Duration(days: 6));
       filtrados = _historicoCompleto.where((r) {
         final dataRegistro = DateTime(r.dataHora.year, r.dataHora.month, r.dataHora.day);
         return !dataRegistro.isBefore(seteDiasAtras) && !dataRegistro.isAfter(hoje);
@@ -141,7 +138,7 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
         return !dataRegistro.isBefore(inicioIntervalo) && !dataRegistro.isAfter(fimIntervalo);
       }).toList();
     }
-    else { // "Todos" or fallback
+    else {
       filtrados = List.from(_historicoCompleto);
     }
 
@@ -154,9 +151,9 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
   Widget _buildChipFiltro(String label) {
     bool isSelected = _filtroSelecionado == label;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3.0), // Slightly reduced padding
+      padding: const EdgeInsets.symmetric(horizontal: 3.0),
       child: ChoiceChip(
-        label: Text(label, style: TextStyle(fontSize: 13)), // Slightly smaller font
+        label: Text(label, style: TextStyle(fontSize: 13)),
         selected: isSelected,
         onSelected: (selected) {
           if (selected) {
@@ -179,8 +176,8 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
             side: BorderSide(
               color: isSelected ? const Color(0xFFF9A825) : Colors.grey.shade300,
             )),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), // Adjust padding
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, // More compact tap target
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
@@ -242,27 +239,27 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0), // Adjusted
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
             child: Card(
               elevation: 2.0,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0)),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0), // Adjusted
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: [ // Removed MainAxisAlignment for tighter packing
+                    children: [
                       _buildChipFiltro("Hoje"),
                       _buildChipFiltro("Ontem"),
                       _buildChipFiltro("Últimos 7 dias"),
                       _buildChipFiltro("Todos"),
                       IconButton(
-                        icon: const Icon(Icons.calendar_today_outlined, color: Color(0xFFF9A825), size: 22), // Smaller icon
+                        icon: const Icon(Icons.calendar_today_outlined, color: Color(0xFFF9A825), size: 22),
                         onPressed: _selecionarIntervalo,
                         tooltip: "Selecionar intervalo personalizado",
-                        padding: const EdgeInsets.symmetric(horizontal: 8), // Adjust padding
-                        constraints: const BoxConstraints(), // Remove default IconButton constraints if needed
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
@@ -282,7 +279,7 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
                   _historicoCompleto.isEmpty
                       ? "Nenhum registro de alimentação encontrado."
                       : "Nenhum registro encontrado para o filtro selecionado.",
-                  style: const TextStyle(fontSize: 15, color: Colors.grey), // Adjusted
+                  style: const TextStyle(fontSize: 15, color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -291,21 +288,21 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
               onRefresh: _carregarHistorico,
               color: const Color(0xFFF9A825),
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0), // Adjusted
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
                 itemCount: _historicoFiltrado.length,
                 itemBuilder: (context, index) {
                   final registro = _historicoFiltrado[index];
                   return Card(
                     elevation: 1.5,
-                    margin: const EdgeInsets.symmetric(vertical: 5.0), // Adjusted
+                    margin: const EdgeInsets.symmetric(vertical: 5.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                     child: ListTile(
                       leading: CircleAvatar(
-                        radius: 22, // Slightly smaller
+                        radius: 22,
                         backgroundColor: registro.concluido
-                            ? const Color(0xFFF9A825).withOpacity(0.15) // Adjusted opacity
+                            ? const Color(0xFFF9A825).withOpacity(0.15)
                             : Colors.orange.withOpacity(0.1),
                         child: Icon(
                           registro.tipo.toLowerCase().contains('plano') || registro.tipo.toLowerCase().contains('rotina')
@@ -313,7 +310,7 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
                               : registro.tipo.toLowerCase().contains('manual')
                               ? Icons.touch_app_outlined
                               : Icons.pets,
-                          size: 22, // Smaller icon
+                          size: 22,
                           color: registro.concluido
                               ? const Color(0xFFF9A825)
                               : Colors.orange.shade700,
@@ -322,7 +319,7 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
                       title: Text(
                         registro.nomePlano?.isNotEmpty == true ? registro.nomePlano! : registro.tipo,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 14.5), // Adjusted
+                            fontWeight: FontWeight.w600, fontSize: 14.5),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -330,13 +327,13 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            DateFormat('EEEE, dd/MM/yy – HH:mm','pt_BR').format(registro.dataHora), // Shorter year
-                            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700), // Adjusted
+                            DateFormat('EEEE, dd/MM/yy – HH:mm','pt_BR').format(registro.dataHora),
+                            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700),
                           ),
                           Text(
                             "Qtd: ${registro.quantidade % 1 == 0 ? registro.quantidade.toInt() : registro.quantidade.toStringAsFixed(1)}g"
-                                "${registro.petNome.isNotEmpty ? ' (${registro.petNome})' : ''}", // Pet name in parenthesis
-                            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600), // Adjusted
+                                "${registro.petNome.isNotEmpty ? ' (${registro.petNome})' : ''}",
+                            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -349,10 +346,10 @@ class _HistoricoAlimentacaoPageState extends State<HistoricoAlimentacaoPage> {
                         color: registro.concluido
                             ? Colors.green.shade600
                             : Colors.orange.shade600,
-                        size: 26, // Adjusted
+                        size: 26,
                       ),
-                      isThreeLine: true, // Remains true to accommodate two lines of subtitle
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12), // Adjust padding
+                      isThreeLine: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     ),
                   );
                 },

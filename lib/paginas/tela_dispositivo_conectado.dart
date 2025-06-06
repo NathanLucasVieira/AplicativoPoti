@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:projetoflutter/widgets/app_bar_poti.dart';
-import 'package:projetoflutter/widgets/side_bar_menu.dart';
-<<<<<<< HEAD
-import 'package:projetoflutter/widgets/pet_card.dart'; // Ensure Pet model is here
-=======
-import 'package:projetoflutter/widgets/pet_card.dart';
-import 'package:projetoflutter/paginas/detalhes_pet_page.dart'; // Import da tela de detalhes
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
+import 'package:trabalhopoti/widgets/app_bar_poti.dart'; // <<< CORREÇÃO
+import 'package:trabalhopoti/widgets/side_bar_menu.dart';
+import 'package:trabalhopoti/widgets/pet_card.dart';
+import 'package:trabalhopoti/paginas/detalhes_pet_page.dart';
 
 class TelaDispositivoConectado extends StatefulWidget {
   const TelaDispositivoConectado({super.key});
@@ -31,19 +27,8 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
   @override
   void initState() {
     super.initState();
-    // Initialize with a default value, even if it changes later
-    _pageController = PageController(viewportFraction: 0.8, initialPage: _currentPage);
+    _pageController = PageController(viewportFraction: 0.8, initialPage: 0);
     _fetchUserPets();
-
-    _pageController.addListener(() {
-      if (_pageController.page?.round() != _currentPage && _pageController.hasClients) {
-        if(mounted){
-          setState(() {
-            _currentPage = _pageController.page!.round();
-          });
-        }
-      }
-    });
   }
 
   Future<void> _fetchUserPets() async {
@@ -63,66 +48,27 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
           return Pet.fromMap(doc.data() as Map<String, dynamic>, doc.id);
         }).toList();
 
-<<<<<<< HEAD
-=======
-        // Ordena os pets alfabeticamente pelo nome para consistência
         pets.sort((a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()));
 
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
         if (!mounted) return;
         setState(() {
           _petsCadastrados = pets;
           _isLoadingPets = false;
-<<<<<<< HEAD
-          // Update PageController initial page if pets list was empty and now has items
-          if (_petsCadastrados.isNotEmpty && _currentPage >= _petsCadastrados.length) {
-=======
-          // Garante que _currentPage seja válido após o fetch
+
           if (_petsCadastrados.isNotEmpty) {
             _currentPage = _currentPage.clamp(0, _petsCadastrados.length - 1);
-            // Se o pageController já foi criado e tem clientes, anima para a página correta
             if (_pageController.hasClients) {
-              // Apenas atualiza se a página realmente mudou para evitar saltos desnecessários
-              if(_pageController.page?.round() != _currentPage) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if(_pageController.hasClients) { // Checa novamente por segurança
-                    _pageController.jumpToPage(_currentPage);
-                  }
-                });
-              }
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if(_pageController.hasClients) {
+                  _pageController.jumpToPage(_currentPage);
+                }
+              });
             }
           } else {
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
             _currentPage = 0;
-          }
-          if (_pageController.hasClients && _petsCadastrados.isNotEmpty) {
-            // No need to jump if it's already at a valid page or list is empty.
-            // _pageController.jumpToPage(_currentPage); //This can cause issues if called too early or state changes rapidly
-          } else if (_petsCadastrados.isEmpty){
-            _currentPage = 0; // Or -1 if you want to signify no page.
           }
         });
       } catch (e) {
-<<<<<<< HEAD
-        // ignore: avoid_print
-        print("Erro ao buscar pets: $e");
-        if (!mounted) return;
-        setState(() {
-          _isLoadingPets = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar os pets: ${e.toString()}')),
-        );
-      }
-    } else {
-      if (!mounted) return;
-      setState(() {
-        _isLoadingPets = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Usuário não autenticado.')),
-      );
-=======
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao carregar os pets: ${e.toString()}')),
@@ -138,8 +84,8 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
       );
       setState(() {
         _isLoadingPets = false;
+        _petsCadastrados = [];
       });
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
     }
   }
 
@@ -157,8 +103,6 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
       ),
     );
     if (result == true && mounted) {
-      // Se result for true, significa que houve alteração (salvo ou excluído)
-      // Atualiza a lista de pets
       _fetchUserPets();
     }
   }
@@ -181,54 +125,10 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
           ));
     }
 
-    // Re-initialize PageController if it was disposed or if number of pages changed drastically
-    // This is a simplified check; more complex logic might be needed for dynamic page counts
-    if (!_pageController.hasClients || (_pageController.viewportFraction != 0.8 && _petsCadastrados.isNotEmpty) ) {
-      _pageController = PageController(viewportFraction: 0.8, initialPage: _currentPage);
-    }
-
-
-    const double carouselHeight = 160.0; // Slightly reduced height for cards
+    const double carouselHeight = 160.0;
 
     return Column(
       children: [
-<<<<<<< HEAD
-        SizedBox( // Explicitly define SizedBox for PageView
-          height: carouselHeight,
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: _petsCadastrados.length,
-            onPageChanged: (int page) {
-              if(mounted){
-                setState(() {
-                  _currentPage = page;
-                });
-              }
-            },
-            itemBuilder: (context, index) {
-              // Card scaling animation (optional, can be simplified if causing issues)
-              double scaleFactor = 0.85; // Non-selected scale
-              if (_pageController.position.haveDimensions) {
-                // Use _currentPage if page is not yet an integer (during scroll)
-                double page = _pageController.page ?? _currentPage.toDouble();
-                scaleFactor = (1 - ((index - page).abs() * 0.15)).clamp(0.85, 1.0);
-              } else if (index == _currentPage) {
-                scaleFactor = 1.0; // Selected scale
-              }
-
-              return Transform.scale(
-                scale: scaleFactor,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0), // Adjust padding
-                  child: PetCard(
-                    pet: _petsCadastrados[index],
-                    isSelected: index == _currentPage,
-                  ),
-                ),
-              );
-            },
-          ),
-=======
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -242,7 +142,7 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                 );
               },
             )
-                : const SizedBox(width: 48), // Espaço para alinhar quando não há seta
+                : const SizedBox(width: 48),
 
             Expanded(
               child: SizedBox(
@@ -278,7 +178,7 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                       child: GestureDetector(
                         onTap: () => _navigateToPetDetails(pet),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0), // Espaço para a sombra do card
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: PetCard(
                             pet: pet,
                             isSelected: index == _currentPage,
@@ -300,11 +200,10 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                 );
               },
             )
-                : const SizedBox(width: 48), // Espaço para alinhar
+                : const SizedBox(width: 48),
           ],
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
         ),
-        if (_petsCadastrados.length > 1) ...[ // Show indicator only if more than 1 pet
+        if (_petsCadastrados.length > 1) ...[
           const SizedBox(height: 10.0),
           _buildPageIndicator(),
         ]
@@ -318,17 +217,10 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
     List<Widget> indicators = [];
     for (int i = 0; i < _petsCadastrados.length; i++) {
       indicators.add(
-<<<<<<< HEAD
-        AnimatedContainer( // Added animation for indicator change
-          duration: const Duration(milliseconds: 150),
-          width: _currentPage == i ? 10.0 : 8.0, // Larger if selected
-          height: _currentPage == i ? 10.0 : 8.0,
-=======
         AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           width: _currentPage == i ? 12.0 : 8.0,
           height: _currentPage == i ? 12.0 : 8.0,
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
           margin: const EdgeInsets.symmetric(horizontal: 4.0),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -347,51 +239,37 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
 
   Widget _buildAlimentadorStatusCard() {
     return Container(
-      padding: const EdgeInsets.all(16.0), // Reduced padding
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15.0), // Slightly smaller radius
+        borderRadius: BorderRadius.circular(15.0),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1, // Reduced spread
-            blurRadius: 4,   // Reduced blur
+            spreadRadius: 1,
+            blurRadius: 4,
           ),
         ],
       ),
       child: Column(
         children: [
-          const Icon(Icons.wifi, size: 36, color: Color(0xFFF9A825)), // Slightly smaller icon
+          const Icon(Icons.wifi, size: 36, color: Color(0xFFF9A825)),
           const SizedBox(height: 8),
           const Text(
-<<<<<<< HEAD
-            "Alimentador Conectado", // Generic name
-=======
-            "Alimentador P.O.T.I", // Nome genérico do alimentador
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
+            "Alimentador P.O.T.I",
             style: TextStyle(
-                fontSize: 17, // Adjusted font size
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
                 color: Colors.green),
           ),
           const SizedBox(height: 4),
           Text(
-<<<<<<< HEAD
-            "Status: Online", // Simplified status
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade700), // Adjusted font size
-          ),
-          Text(
-            "Rede: Wi-Fi SUCESSO - 2.4 GHz", // Example network
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600), // Adjusted font size
-=======
             "Status: Conectado",
             style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
           ),
           Text(
-            "Rede: Wi-Fi SUCESSO - 2.4 GHz", // Exemplo de rede
+            "Rede: Wi-Fi SUCESSO - 2.4 GHz",
             style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
           ),
         ],
       ),
@@ -400,26 +278,16 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
 
   Widget _buildSocialMediaFooter() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0), // Reduced padding
-      child: Wrap( // Used Wrap for responsiveness
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Wrap(
         alignment: WrapAlignment.center,
-        spacing: 12.0, // Spacing between items
-        runSpacing: 8.0, // Spacing between lines
+        spacing: 12.0,
+        runSpacing: 8.0,
         children: [
-<<<<<<< HEAD
-          Text('Siga-nos:', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)), // Adjusted
+          Text('Siga nas Redes sociais', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
           const Icon(Icons.facebook, size: 22),
           const Icon(Icons.camera_alt_outlined, size: 22),
-          const Icon(Icons.alternate_email, size: 22), // Changed to a generic social icon
-=======
-          Text('Siga nas Redes sociais'),
-          SizedBox(width: 10),
-          Icon(Icons.facebook), // Exemplo de ícone
-          SizedBox(width: 10),
-          Icon(Icons.camera_alt_outlined), // Exemplo de ícone
-          SizedBox(width: 10),
-          Icon(Icons.alternate_email), // Exemplo de ícone
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
+          const Icon(Icons.alternate_email, size: 22),
         ],
       ),
     );
@@ -427,7 +295,6 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
 
   @override
   Widget build(BuildContext context) {
-    // Determina o pet selecionado para a AppBar
     Pet? petSelecionadoParaAppBar;
     if (_petsCadastrados.isNotEmpty && _currentPage < _petsCadastrados.length) {
       petSelecionadoParaAppBar = _petsCadastrados[_currentPage];
@@ -437,7 +304,7 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
       key: _scaffoldKey,
       appBar: AppBarPoti(
         scaffoldKey: _scaffoldKey,
-        titleText: petSelecionadoParaAppBar == null ? "Meus Pets" : null, // Mostra "Meus Pets" se nenhum pet estiver no carrossel
+        titleText: petSelecionadoParaAppBar == null ? "Meus Pets" : null,
         selectedPet: petSelecionadoParaAppBar,
         onSelectedPetTap: petSelecionadoParaAppBar != null
             ? () => _navigateToPetDetails(petSelecionadoParaAppBar!)
@@ -445,48 +312,27 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
       ),
       drawer: const SideMenu(),
       backgroundColor: const Color(0xFFFAFAFA),
-<<<<<<< HEAD
-      body: RefreshIndicator( // Added RefreshIndicator
+      body: RefreshIndicator(
         onRefresh: _fetchUserPets,
         color: const Color(0xFFF9A825),
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(), // Ensure scroll even if content is small
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0), // Adjusted padding
-=======
-      body: RefreshIndicator( // Adicionado RefreshIndicator
-        onRefresh: _fetchUserPets,
-        color: const Color(0xFFF9A825),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(), // Permite scroll mesmo com pouco conteúdo
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 12.0),
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-<<<<<<< HEAD
-                  padding: const EdgeInsets.all(12.0), // Reduced padding
-=======
                   padding: const EdgeInsets.all(16.0),
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12.0),
                     boxShadow: [
                       BoxShadow(
-<<<<<<< HEAD
-                        color: Colors.grey.withOpacity(0.15), // Slightly adjusted shadow
-                        spreadRadius: 1,
-                        blurRadius: 3,
-                        offset: const Offset(0, 1),
-=======
                         color: Colors.grey.withOpacity(0.2),
                         spreadRadius: 1,
                         blurRadius: 4,
                         offset: const Offset(0, 2),
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
                       ),
                     ],
                   ),
@@ -495,22 +341,14 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Padding(
-<<<<<<< HEAD
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0), // Adjusted
-=======
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
                               "Seus Pets Cadastrados",
                               style: TextStyle(
-<<<<<<< HEAD
-                                fontSize: 17, // Adjusted
-=======
                                 fontSize: 18,
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -526,43 +364,12 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                                   _petsCadastrados.length.toString(),
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
-<<<<<<< HEAD
-                                      fontSize: 13, // Adjusted
-=======
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
                                       color: Colors.grey.shade700),
                                 ),
                               ),
                           ],
                         ),
                       ),
-<<<<<<< HEAD
-                      const SizedBox(height: 2), // Reduced
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                        child: Text(
-                          "Arraste para ver os detalhes do seu pet.", // Changed text
-                          style: TextStyle(fontSize: 13, color: Colors.grey.shade600), // Adjusted
-                        ),
-                      ),
-                      const SizedBox(height: 12), // Adjusted
-                      _buildPetCarousel(),
-                      const SizedBox(height: 4.0), // Adjusted
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24), // Adjusted
-                Center(child: _buildAlimentadorStatusCard()),
-                const SizedBox(height: 24), // Adjusted
-                _buildSocialMediaFooter(),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, top: 8.0), // Adjusted
-                  child: Center(
-                    child: Text(
-                      "P.O.T.I\n©2024 Todos os Direitos Reservados", // Updated year
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600), // Adjusted
-=======
                       const SizedBox(height: 4),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -573,7 +380,7 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                       ),
                       const SizedBox(height: 16),
                       _buildPetCarousel(),
-                      const SizedBox(height: 8.0), // Espaço após o carrossel
+                      const SizedBox(height: 8.0),
                     ],
                   ),
                 ),
@@ -585,10 +392,9 @@ class _TelaDispositivoConectadoState extends State<TelaDispositivoConectado> {
                   padding: const EdgeInsets.only(bottom: 8.0, top: 10),
                   child: Center(
                     child: Text(
-                      "P.O.T.I\n©2024 Todos os Direitos Reservados", // Atualizado o ano
+                      "P.O.T.I\n©2024 Todos os Direitos Reservados",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
->>>>>>> 53061dc7b58e7cb904a2031c6cc3dad74cac5524
                     ),
                   ),
                 ),

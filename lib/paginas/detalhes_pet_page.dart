@@ -1,14 +1,13 @@
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:projetoflutter/widgets/app_bar_poti.dart';
-import 'package:projetoflutter/widgets/side_bar_menu.dart';
-import 'package:projetoflutter/widgets/pet_card.dart';
-import 'package:projetoflutter/paginas/tela_dispositivo_conectado.dart';
+import 'package:trabalhopoti/widgets/app_bar_poti.dart'; // <<< CORREÇÃO
+import 'package:trabalhopoti/widgets/side_bar_menu.dart';
+import 'package:trabalhopoti/widgets/pet_card.dart';
+import 'package:trabalhopoti/paginas/tela_dispositivo_conectado.dart';
 
 class DetalhesPetPage extends StatefulWidget {
   final Pet pet;
@@ -260,7 +259,6 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
                                   ),
                                 ],
                               ),
-                              //A Edição da imagem do pet e de subir, ainda não esta funcionando, Função premiun do firebase
                               child: ClipOval(
                                 child: GestureDetector(
                                   onTap: _isEditing ? _selecionarImagem : null,
@@ -286,8 +284,8 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
                                       border: Border.all(color: Colors.white, width: 3)
                                   ),
                                   child: const Padding(
-                                    padding: EdgeInsets.all(10.0), // Aumenta o padding do ícone
-                                    child: Icon(Icons.camera_alt, color: Colors.white, size: 24), // Ícone maior
+                                    padding: EdgeInsets.all(10.0),
+                                    child: Icon(Icons.camera_alt, color: Colors.white, size: 24),
                                   ),
                                 ),
                               ),
@@ -295,8 +293,6 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
                         ),
                       ),
                       const SizedBox(height: 30),
-
-                      // Modo de Edição
                       if (_isEditing) ...[
                         _buildTextFieldWithLabel("Nome do Pet", "Digite o nome", _nomeController, Icons.pets),
                         const SizedBox(height: 20),
@@ -333,7 +329,6 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
                           });
                         }, Colors.grey.shade600),
                       ]
-                      // Modo de Visualização
                       else ...[
                         Text(
                           widget.pet.nome,
@@ -374,7 +369,7 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
                         const SizedBox(height: 15),
                         _buildActionButton("Excluir Pet", _excluirPet, Colors.red.shade600, Icons.delete_forever),
                       ],
-                      if (_isLoading) // Indicador de carregamento centralizado e mais visível
+                      if (_isLoading)
                         const Padding(
                           padding: EdgeInsets.only(top: 20.0),
                           child: Center(child: CircularProgressIndicator(color: Color(0xFFF9A825))),
@@ -390,7 +385,6 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
     );
   }
 
-  // campos de texto com label e ícone
   Widget _buildTextFieldWithLabel(String label, String hint, TextEditingController controller, IconData icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,16 +404,16 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
             hintText: hint,
             prefixIcon: Icon(icon, color: const Color(0xFFF9A825)),
             filled: true,
-            fillColor: Colors.grey[50], // Fundo mais claro
+            fillColor: Colors.grey[50],
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0), // Bordas mais arredondadas
+              borderRadius: BorderRadius.circular(12.0),
               borderSide: BorderSide.none,
             ),
-            enabledBorder: OutlineInputBorder( // Borda em estado normal
+            enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
               borderSide: BorderSide(color: Colors.grey.shade300, width: 1.0),
             ),
-            focusedBorder: OutlineInputBorder( // Borda quando focado
+            focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
               borderSide: const BorderSide(color: Color(0xFFF9A825), width: 2.0),
             ),
@@ -437,7 +431,6 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
     );
   }
 
-  // dropdown com label e ícone
   Widget _buildDropdownFieldWithLabel(String label, String? currentValue, List<String> items, ValueChanged<String?> onChanged, IconData icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -480,7 +473,6 @@ class _DetalhesPetPageState extends State<DetalhesPetPage> {
     );
   }
 
-//exibir informações em modo de visualização
   Widget _buildInfoDisplayRow(String label, String value, IconData icon) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
