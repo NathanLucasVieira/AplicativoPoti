@@ -111,12 +111,6 @@ Estrutura Explodida
 Protótipo do Web App (Mobile)
 O design do aplicativo foi pensado para ser limpo, moderno e de fácil utilização.
 
-<p align="center">
-<img src="https://i.imgur.com/GZ5lG51.png" width="250" alt="Tela de Login">
-<img src="https://i.imgur.com/i9q9x3F.png" width="250" alt="Tela Inicial">
-<img src="https://i.imgur.com/g8vBwB8.png" width="250" alt="Tela de Perfil">
-</p>
-
 🚀 Status do Projeto
 Em desenvolvimento... Esse projeto é so uma versão do final
 
@@ -130,3 +124,4 @@ Luiz Guilherme de Queiroz Soares
 Marcos Siqueira Santos
 
 Nathan Lucas de Paula Vieira
+
